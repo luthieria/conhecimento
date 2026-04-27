@@ -214,7 +214,7 @@ export default function App() {
     if (!nodes || nodes.length === 0) return null
     return (
       <div className="tab-links-grid">
-        <div className="tab-links-row">
+        <div className="tab-links-row" style={{ '--tab-count': nodes.length } as any}>
           {nodes.map((node, i) => (
             <div
               key={i}
@@ -537,7 +537,7 @@ export default function App() {
         </div>
       </aside>
 
-      <main className={`min-h-screen pt-14 pb-32 transition-all duration-[220ms] ease-[cubic-bezier(0.22,0.61,0.36,1)] ${isSidebarPinned ? 'ml-72' : 'ml-0'}`}>
+      <main className="min-h-screen pt-14 pb-32 transition-all duration-[220ms] ease-[cubic-bezier(0.22,0.61,0.36,1)] ml-0">
         <nav className="bg-transparent font-['IBM_Plex_Sans'] uppercase text-[10px] tracking-widest font-bold flex items-center px-12 py-8 w-full mt-4">
           <span className="text-[#e7e5e8]/30">Amethyst Content</span>
           <span className="text-[#e7e5e8]/30 mx-3">/</span>
@@ -546,7 +546,7 @@ export default function App() {
           </span>
         </nav>
 
-        <article className="max-w-[40rem] mx-auto px-12 mt-8 font-body leading-relaxed pb-40">
+        <article className="max-w-[40rem] mx-auto px-4 mt-8 font-body leading-relaxed pb-40">
           {isLoading ? (
             <div className="text-center mt-32 text-[#e7e5e8]/40 animate-pulse font-['IBM_Plex_Sans'] tracking-widest uppercase text-sm">
               Retrieving Archives...

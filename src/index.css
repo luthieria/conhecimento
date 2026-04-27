@@ -261,6 +261,12 @@ body {
 }
 
 .tab-links-row {
+    --tab-count-safe: max(1, var(--tab-count, 1));
+    --tab-basis: clamp(
+        var(--tab-min),
+        calc((100% - (var(--tab-gap) * (var(--tab-count-safe) - 1))) / var(--tab-count-safe)),
+        var(--tab-max)
+    );
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
@@ -271,7 +277,7 @@ body {
 .tab-link {
     display: flex;
     flex-direction: column;
-    flex: 0 1 18rem;
+    flex: 0 1 var(--tab-basis);
     min-width: var(--tab-min);
     max-width: var(--tab-max);
     aspect-ratio: 1 / 1;
