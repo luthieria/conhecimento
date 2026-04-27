@@ -31,14 +31,26 @@ const CustomTableHeader = TableHeader.extend({
         },
       },
       verticalAlign: {
-        default: 'top',
-        parseHTML: element => element.style.verticalAlign || 'top',
+        default: 'middle',
+        parseHTML: element => element.style.verticalAlign || 'middle',
         renderHTML: attributes => {
-          if (!attributes.verticalAlign || attributes.verticalAlign === 'top') {
+          if (!attributes.verticalAlign || attributes.verticalAlign === 'middle') {
             return {}
           }
           return {
             style: `vertical-align: ${attributes.verticalAlign};`,
+          }
+        },
+      },
+      textAlign: {
+        default: 'center',
+        parseHTML: element => element.style.textAlign || 'center',
+        renderHTML: attributes => {
+          if (!attributes.textAlign || attributes.textAlign === 'center') {
+            return {}
+          }
+          return {
+            style: `text-align: ${attributes.textAlign};`,
           }
         },
       },
@@ -64,14 +76,26 @@ const CustomTableCell = TableCell.extend({
         },
       },
       verticalAlign: {
-        default: 'top',
-        parseHTML: element => element.style.verticalAlign || 'top',
+        default: 'middle',
+        parseHTML: element => element.style.verticalAlign || 'middle',
         renderHTML: attributes => {
-          if (!attributes.verticalAlign || attributes.verticalAlign === 'top') {
+          if (!attributes.verticalAlign || attributes.verticalAlign === 'middle') {
             return {}
           }
           return {
             style: `vertical-align: ${attributes.verticalAlign};`,
+          }
+        },
+      },
+      textAlign: {
+        default: 'center',
+        parseHTML: element => element.style.textAlign || 'center',
+        renderHTML: attributes => {
+          if (!attributes.textAlign || attributes.textAlign === 'center') {
+            return {}
+          }
+          return {
+            style: `text-align: ${attributes.textAlign};`,
           }
         },
       },
@@ -81,7 +105,7 @@ const CustomTableCell = TableCell.extend({
 
 
 const TableTopMenu = ({ editor }: { editor: any }) => {
-  const [pos, setPos] = useState<{ top: number, left: number } | null>(null)
+  const [pos, setPos] = useState<{ top: number, left: number, width: number } | null>(null)
 
   useEffect(() => {
     if (!editor) return
@@ -95,7 +119,7 @@ const TableTopMenu = ({ editor }: { editor: any }) => {
         }
         if (node && node.nodeName === 'TABLE') {
           const rect = node.getBoundingClientRect()
-          setPos({ top: rect.top, left: rect.left })
+          setPos({ top: rect.top, left: rect.left, width: rect.width })
           return
         }
       }
@@ -114,9 +138,9 @@ const TableTopMenu = ({ editor }: { editor: any }) => {
   if (!pos) return null
 
   return (
-    <div 
+    <div
       className="fixed z-[60] flex bg-[#1f1f22] backdrop-blur-xl border border-[#303033] rounded-md p-1.5 gap-1.5 text-[#e7e5e8] shadow-lg text-xs font-['IBM_Plex_Sans'] items-center"
-      style={{ top: pos.top - 45, left: pos.left }}
+      style={{ top: pos.top - 45, left: pos.left + pos.width / 2, transform: 'translateX(-50%)' }}
       onMouseDown={(e) => e.preventDefault()}
     >
       <button onClick={() => editor.chain().focus().setTextAlign('left').run()} className={`px-1.5 py-1 rounded transition-colors block leading-tight ${editor.isActive({ textAlign: 'left' }) ? 'bg-[#81a1c1] text-[#0e0e0f]' : 'hover:bg-[#303033]'}`} title="Align Left"><span className="material-symbols-outlined text-[16px]">format_align_left</span></button>
@@ -130,7 +154,12 @@ const TableTopMenu = ({ editor }: { editor: any }) => {
       <button onClick={() => editor.chain().focus().setCellAttribute('backgroundColor', '#cfe2f3').run()} className="w-5 h-5 bg-[#cfe2f3] rounded-full border border-black/20 hover:scale-110 transition-transform" title="Set Blue Background"></button>
       <button onClick={() => editor.chain().focus().setCellAttribute('backgroundColor', '#f4cccc').run()} className="w-5 h-5 bg-[#f4cccc] rounded-full border border-black/20 hover:scale-110 transition-transform" title="Set Red Background"></button>
       <button onClick={() => editor.chain().focus().setCellAttribute('backgroundColor', '#d9ead3').run()} className="w-5 h-5 bg-[#d9ead3] rounded-full border border-black/20 hover:scale-110 transition-transform" title="Set Green Background"></button>
-      <button onClick={() => editor.chain().focus().setCellAttribute('backgroundColor', null).run()} className="px-2 py-1 hover:bg-[#303033] rounded transition-colors block leading-tight font-medium opacity-70" title="Clear Color">Clear</button>
+      <button onClick={() => editor.chain().focus().setCellAttribute('backgroundColor', '#fff2cc').run()} className="w-5 h-5 bg-[#fff2cc] rounded-full border border-black/20 hover:scale-110 transition-transform" title="Set Yellow Background"></button>
+      <button onClick={() => editor.chain().focus().setCellAttribute('backgroundColor', '#fce5cd').run()} className="w-5 h-5 bg-[#fce5cd] rounded-full border border-black/20 hover:scale-110 transition-transform" title="Set Orange Background"></button>
+      <button onClick={() => editor.chain().focus().setCellAttribute('backgroundColor', '#ead1dc').run()} className="w-5 h-5 bg-[#ead1dc] rounded-full border border-black/20 hover:scale-110 transition-transform" title="Set Purple Background"></button>
+      <button onClick={() => editor.chain().focus().setCellAttribute('backgroundColor', '#d0e0e3').run()} className="w-5 h-5 bg-[#d0e0e3] rounded-full border border-black/20 hover:scale-110 transition-transform" title="Set Cyan Background"></button>
+      <button onClick={() => editor.chain().focus().setCellAttribute('backgroundColor', '#d9d9d9').run()} className="w-5 h-5 bg-[#d9d9d9] rounded-full border border-black/20 hover:scale-110 transition-transform" title="Set Gray Background"></button>
+      <button onClick={() => editor.chain().focus().setCellAttribute('backgroundColor', null).run()} className="px-1.5 py-1 hover:bg-[#303033] rounded transition-colors block leading-tight opacity-70" title="Clear Color"><span className="material-symbols-outlined text-[16px]">format_color_reset</span></button>
     </div>
   )
 }
@@ -138,11 +167,12 @@ const TableTopMenu = ({ editor }: { editor: any }) => {
 export default function App() {
   const [fileTree, setFileTree] = useState<any[]>([])
   const [activeFile, setActiveFile] = useState<string | null>(null)
+  const [contextMenu, setContextMenu] = useState<{ x: number, y: number, show: boolean } | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
   const [frontmatter, setFrontmatter] = useState<string>('')
-  
+
   // Track headings for TOC
   const [headings, setHeadings] = useState<{ level: number, text: string, id: string }[]>([])
 
@@ -200,17 +230,17 @@ export default function App() {
         // Parse frontmatter correctly so it doesn't render in the editor block
         const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*(?:\n|$)/;
         const match = text.match(frontmatterRegex);
-        
+
         let fm = '';
         let contentBody = text;
-        
+
         if (match) {
           fm = match[0];
           contentBody = text.substring(match[0].length);
         }
-        
+
         setFrontmatter(fm);
-        
+
         // Protect Hugo shortcodes and Obsidian Wikilinks from being stripped or escaped by TipTap
         const protectedBody = contentBody
           .replace(/{{</g, 'REPLACE_HUGO_L')
@@ -229,14 +259,14 @@ export default function App() {
   const saveFile = useCallback(() => {
     if (!activeFile || !editor) return
     setIsSaving(true)
-    
+
     const html = editor.getHTML()
     const turndownService = new TurndownService({ headingStyle: 'atx' })
     turndownService.use(gfm)
     turndownService.keep(['table', 'tr', 'td', 'th', 'tbody', 'thead', 'colgroup', 'col'])
-    
+
     let markdownOutput = turndownService.turndown(html)
-    
+
     // Restore the protected syntaxes, removing any escaping Turndown might have theoretically added
     markdownOutput = markdownOutput
       .replace(/REPLACE_HUGO_L/g, '{{<')
@@ -245,7 +275,7 @@ export default function App() {
       .replace(/REPLACE_WIKI_R/g, ']]');
 
     const finalContent = frontmatter + markdownOutput
-    
+
     fetch('/api/save', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -276,7 +306,7 @@ export default function App() {
   const createNewFile = () => {
     const filename = prompt("Enter new manuscript name (e.g., 'Chapter 1'):");
     if (!filename) return;
-    
+
     // Decide directory based on activeFile or default to root
     let dir = '';
     if (activeFile) {
@@ -313,54 +343,52 @@ export default function App() {
         const isExpanded = expandedFolders.has(node.path)
         return (
           <div key={node.path || (node.name + i)}>
-             <div 
-               onClick={() => toggleFolder(node.path)}
-               style={{ paddingLeft: `${(level + 1) * 1.5}rem` }}
-               className="flex items-center text-[#e7e5e8]/70 hover:bg-[#1f1f22] py-2 mt-1 mb-1 hover:text-[#e7e5e8] cursor-pointer transition-colors border-l-[3px] border-transparent"
-             >
-               <span className="material-symbols-outlined mr-2 text-[16px] transition-transform duration-200" style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)'}}>
-                 chevron_right
-               </span>
-               <span className="text-[10px] font-bold tracking-widest uppercase">{node.name}</span>
-             </div>
-             <div className={`overflow-hidden transition-all ${isExpanded ? 'block' : 'hidden'}`}>
-                {node.children && renderTree(node.children, level + 1)}
-             </div>
+            <div
+              onClick={() => toggleFolder(node.path)}
+              style={{ paddingLeft: `${(level + 1) * 1.5}rem` }}
+              className="flex items-center text-[#e7e5e8]/70 hover:bg-[#1f1f22] py-2 mt-1 mb-1 hover:text-[#e7e5e8] cursor-pointer transition-colors border-l-[3px] border-transparent"
+            >
+              <span className="material-symbols-outlined mr-2 text-[16px] transition-transform duration-200" style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}>
+                chevron_right
+              </span>
+              <span className="text-[10px] font-bold tracking-widest uppercase">{node.name}</span>
+            </div>
+            <div className={`overflow-hidden transition-all ${isExpanded ? 'block' : 'hidden'}`}>
+              {node.children && renderTree(node.children, level + 1)}
+            </div>
           </div>
         )
       } else if (node.type === 'folder-link') {
         const isActive = activeFile === node.path
         return (
           <div key={node.path || (node.name + i)}>
-             <div 
-               onClick={() => loadFile(node.path)}
-               style={{ paddingLeft: `${(level + 1) * 1.5}rem` }}
-               title={node.path}
-               className={`flex items-center py-2 mt-1 mb-1 cursor-pointer transition-colors ${
-                 isActive ? 'bg-[#81a1c1]/10 text-[#81a1c1] border-l-[3px] border-[#81a1c1]' : 'text-[#e7e5e8]/70 hover:bg-[#1f1f22] hover:text-[#e7e5e8] border-l-[3px] border-transparent'
-               }`}
-             >
-               <span className="material-symbols-outlined mr-2 text-[16px]">
-                 folder
-               </span>
-               <span className="text-[10px] font-bold tracking-widest uppercase truncate">{node.name}</span>
-             </div>
+            <div
+              onClick={() => loadFile(node.path)}
+              style={{ paddingLeft: `${(level + 1) * 1.5}rem` }}
+              title={node.path}
+              className={`flex items-center py-2 mt-1 mb-1 cursor-pointer transition-colors ${isActive ? 'bg-[#81a1c1]/10 text-[#81a1c1] border-l-[3px] border-[#81a1c1]' : 'text-[#e7e5e8]/70 hover:bg-[#1f1f22] hover:text-[#e7e5e8] border-l-[3px] border-transparent'
+                }`}
+            >
+              <span className="material-symbols-outlined mr-2 text-[16px]">
+                folder
+              </span>
+              <span className="text-[10px] font-bold tracking-widest uppercase truncate">{node.name}</span>
+            </div>
           </div>
         )
       } else {
         const isActive = activeFile === node.path
         return (
-          <div 
-             key={node.path} 
-             onClick={() => loadFile(node.path)}
-             style={{ paddingLeft: `${(level + 1) * 1.5 + 1.5}rem` }}
-             title={node.path}
-             className={`flex items-center py-2 cursor-pointer transition-all ${
-               isActive ? 'bg-[#81a1c1]/10 text-[#81a1c1] border-l-[3px] border-[#81a1c1]' : 'text-[#e7e5e8]/60 hover:bg-[#1f1f22] hover:text-[#e7e5e8] border-l-[3px] border-transparent'
-             }`}
+          <div
+            key={node.path}
+            onClick={() => loadFile(node.path)}
+            style={{ paddingLeft: `${(level + 1) * 1.5 + 1.5}rem` }}
+            title={node.path}
+            className={`flex items-center py-2 cursor-pointer transition-all ${isActive ? 'bg-[#81a1c1]/10 text-[#81a1c1] border-l-[3px] border-[#81a1c1]' : 'text-[#e7e5e8]/60 hover:bg-[#1f1f22] hover:text-[#e7e5e8] border-l-[3px] border-transparent'
+              }`}
           >
-             <span className="material-symbols-outlined mr-2 text-[14px]">description</span>
-             <span className="text-[12px] truncate">{node.name}</span>
+            <span className="material-symbols-outlined mr-2 text-[14px]">description</span>
+            <span className="text-[12px] truncate">{node.name}</span>
           </div>
         )
       }
@@ -374,36 +402,35 @@ export default function App() {
           <span className="text-xl font-['Ibarra_Real_Nova'] italic text-[#bf616a]">The Curated Manuscript</span>
         </div>
         <div className="flex items-center gap-6">
-          <button 
+          <button
             onClick={() => editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
             className="px-3 py-1.5 rounded-md flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold transition-all bg-[#1f1f22] text-[#e7e5e8]/70 hover:bg-[#1f1f22]/80 hover:text-[#e7e5e8]"
           >
             <span className="material-symbols-outlined text-[14px]">table</span>
             Insert Table
           </button>
-          <button 
+          <button
             onClick={saveFile}
             disabled={!activeFile}
-            className={`px-4 py-2 rounded-md flex items-center gap-2 text-xs font-semibold transition-all ${
-              !activeFile ? 'opacity-30 cursor-not-allowed text-[#e7e5e8]' :
-              isSaving ? 'bg-[#a3be8c] text-[#0e0e0f]' : 'bg-[#1f1f22] text-[#81a1c1] hover:bg-[#81a1c1]/20'
-            }`}
+            className={`px-4 py-2 rounded-md flex items-center gap-2 text-xs font-semibold transition-all ${!activeFile ? 'opacity-30 cursor-not-allowed text-[#e7e5e8]' :
+                isSaving ? 'bg-[#a3be8c] text-[#0e0e0f]' : 'bg-[#1f1f22] text-[#81a1c1] hover:bg-[#81a1c1]/20'
+              }`}
           >
             <span className="material-symbols-outlined text-[16px]">
-               {isSaving ? 'check_circle' : 'save'}
+              {isSaving ? 'check_circle' : 'save'}
             </span>
             {isSaving ? 'Synchronized' : 'Save Manuscript'}
           </button>
         </div>
       </header>
-      
+
       <aside className="bg-[#131315] font-['IBM_Plex_Sans'] fixed left-0 h-screen w-72 flex flex-col pt-16 z-40 overflow-y-auto border-r border-[#1f1f22] custom-scrollbar">
         <div className="px-6 py-8 flex flex-col gap-1 shrink-0">
           <span className="text-2xl font-bold text-[#e7e5e8]">The Archivist</span>
           <span className="text-[10px] tracking-[0.2em] opacity-40 uppercase">Local Repository</span>
         </div>
         <div className="px-6 pb-4 shrink-0">
-          <button 
+          <button
             onClick={createNewFile}
             className="w-full py-2 bg-primary text-on-primary font-semibold rounded-md text-xs tracking-normal flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
           >
@@ -415,51 +442,56 @@ export default function App() {
           {renderTree(fileTree)}
         </nav>
       </aside>
-      
+
       <main className="ml-72 min-h-screen pt-14 pb-32">
         <nav className="bg-transparent font-['IBM_Plex_Sans'] uppercase text-[10px] tracking-widest font-bold flex items-center px-12 py-8 w-full mt-4">
           <span className="text-[#e7e5e8]/30">Amethyst Content</span>
           <span className="text-[#e7e5e8]/30 mx-3">/</span>
           <span className="text-[#a3be8c] opacity-100 cursor-default">
-             {activeFile ? activeFile.replace('.md', '').split('/').join(' / ') : 'No Focus'}
+            {activeFile ? activeFile.replace('.md', '').split('/').join(' / ') : 'No Focus'}
           </span>
         </nav>
-        
-        <article className="max-w-4xl mx-auto px-12 mt-8 font-body leading-relaxed text-lg pb-40">
+
+        <article className="max-w-4xl mx-auto px-12 mt-8 font-body leading-relaxed pb-40">
           {isLoading ? (
-             <div className="text-center mt-32 text-[#e7e5e8]/40 animate-pulse font-['IBM_Plex_Sans'] tracking-widest uppercase text-sm">
-                Retrieving Archives...
-             </div>
+            <div className="text-center mt-32 text-[#e7e5e8]/40 animate-pulse font-['IBM_Plex_Sans'] tracking-widest uppercase text-sm">
+              Retrieving Archives...
+            </div>
           ) : (
-             <>
-               <EditorContent editor={editor} />
-               <TableTopMenu editor={editor} />
-               {editor && (
-                 <BubbleMenu 
-                   editor={editor} 
-                   updateDelay={0} 
-                   shouldShow={({ editor }: any) => editor.isActive('table')}
-                 >
-                   <div 
-                     className="flex flex-col bg-[#1f1f22] backdrop-blur-xl border border-[#303033] rounded-md py-1 text-[#e7e5e8] shadow-2xl text-[11px] font-['IBM_Plex_Sans'] w-44 z-[70]"
-                     onMouseDown={(e) => e.preventDefault()}
-                   >
-                     <button onClick={() => editor.chain().focus().addRowBefore().run()} className="px-3 py-2 hover:bg-[#303033] rounded transition-colors flex items-center justify-start gap-2.5 leading-tight"><span className="material-symbols-outlined text-[15px] opacity-70">keyboard_arrow_up</span> Insert row above</button>
-                     <button onClick={() => editor.chain().focus().addRowAfter().run()} className="px-3 py-2 hover:bg-[#303033] rounded transition-colors flex items-center justify-start gap-2.5 leading-tight"><span className="material-symbols-outlined text-[15px] opacity-70">keyboard_arrow_down</span> Insert row below</button>
-                     <button onClick={() => editor.chain().focus().deleteRow().run()} className="px-3 py-2 hover:bg-red-500/20 text-red-300 rounded transition-colors flex items-center justify-start gap-2.5 leading-tight"><span className="material-symbols-outlined text-[15px] opacity-70">table_rows</span> Delete row</button>
-                     <div className="h-[1px] bg-[#303033] mx-1 my-0.5"></div>
-                     <button onClick={() => editor.chain().focus().addColumnBefore().run()} className="px-3 py-2 hover:bg-[#303033] rounded transition-colors flex items-center justify-start gap-2.5 leading-tight"><span className="material-symbols-outlined text-[15px] opacity-70">keyboard_arrow_left</span> Insert column left</button>
-                     <button onClick={() => editor.chain().focus().addColumnAfter().run()} className="px-3 py-2 hover:bg-[#303033] rounded transition-colors flex items-center justify-start gap-2.5 leading-tight"><span className="material-symbols-outlined text-[15px] opacity-70">keyboard_arrow_right</span> Insert column right</button>
-                     <button onClick={() => editor.chain().focus().deleteColumn().run()} className="px-3 py-2 hover:bg-red-500/20 text-red-300 rounded transition-colors flex items-center justify-start gap-2.5 leading-tight"><span className="material-symbols-outlined text-[15px] opacity-70">view_column</span> Delete column</button>
-                     <div className="h-[1px] bg-[#303033] mx-1 my-0.5"></div>
-                     <button onClick={() => editor.chain().focus().mergeCells().run()} className="px-3 py-2 hover:bg-[#303033] rounded transition-colors flex items-center justify-start gap-2.5 leading-tight"><span className="material-symbols-outlined text-[15px] opacity-70">merge_type</span> Merge cells</button>
-                     <button onClick={() => editor.chain().focus().splitCell().run()} className="px-3 py-2 hover:bg-[#303033] rounded transition-colors flex items-center justify-start gap-2.5 leading-tight"><span className="material-symbols-outlined text-[15px] opacity-70">splitscreen</span> Split cell</button>
-                     <div className="h-[1px] bg-[#303033] mx-1 my-0.5"></div>
-                     <button onClick={() => editor.chain().focus().deleteTable().run()} className="px-3 py-2 hover:bg-red-500/30 text-red-300 rounded transition-colors flex items-center justify-start gap-2.5 leading-tight"><span className="material-symbols-outlined text-[15px] opacity-70">delete</span> Delete table</button>
-                   </div>
-                 </BubbleMenu>
-               )}
-             </>
+            <>
+              <div
+                onContextMenu={(e) => {
+                  if (editor?.isActive('table')) {
+                    e.preventDefault()
+                    setContextMenu({ x: e.clientX, y: e.clientY, show: true })
+                  }
+                }}
+                onClick={() => setContextMenu(null)}
+              >
+                <EditorContent editor={editor} />
+              </div>
+              <TableTopMenu editor={editor} />
+              {contextMenu && contextMenu.show && (
+                <div
+                  className="fixed bg-[#1f1f22] border border-[#303033] rounded-md shadow-xl py-1 z-[70] text-[#e7e5e8] text-[11px] font-['IBM_Plex_Sans'] w-48 flex flex-col"
+                  style={{ top: contextMenu.y, left: contextMenu.x }}
+                  onMouseDown={(e) => e.preventDefault()}
+                >
+                  <button onClick={() => { editor?.chain().focus().addRowBefore().run(); setContextMenu(null); }} className="px-3 py-2 hover:bg-[#303033] flex items-center gap-2.5 text-left"><span className="material-symbols-outlined text-[15px] opacity-70">keyboard_arrow_up</span> Insert row above</button>
+                  <button onClick={() => { editor?.chain().focus().addRowAfter().run(); setContextMenu(null); }} className="px-3 py-2 hover:bg-[#303033] flex items-center gap-2.5 text-left"><span className="material-symbols-outlined text-[15px] opacity-70">keyboard_arrow_down</span> Insert row below</button>
+                  <button onClick={() => { editor?.chain().focus().deleteRow().run(); setContextMenu(null); }} className="px-3 py-2 hover:bg-red-500/20 text-red-300 flex items-center gap-2.5 text-left"><span className="material-symbols-outlined text-[15px] opacity-70">table_rows</span> Delete row</button>
+                  <div className="h-[1px] bg-[#303033] mx-1 my-0.5"></div>
+                  <button onClick={() => { editor?.chain().focus().addColumnBefore().run(); setContextMenu(null); }} className="px-3 py-2 hover:bg-[#303033] flex items-center gap-2.5 text-left"><span className="material-symbols-outlined text-[15px] opacity-70">keyboard_arrow_left</span> Insert column left</button>
+                  <button onClick={() => { editor?.chain().focus().addColumnAfter().run(); setContextMenu(null); }} className="px-3 py-2 hover:bg-[#303033] flex items-center gap-2.5 text-left"><span className="material-symbols-outlined text-[15px] opacity-70">keyboard_arrow_right</span> Insert column right</button>
+                  <button onClick={() => { editor?.chain().focus().deleteColumn().run(); setContextMenu(null); }} className="px-3 py-2 hover:bg-red-500/20 text-red-300 flex items-center gap-2.5 text-left"><span className="material-symbols-outlined text-[15px] opacity-70">view_column</span> Delete column</button>
+                  <div className="h-[1px] bg-[#303033] mx-1 my-0.5"></div>
+                  <button onClick={() => { editor?.chain().focus().mergeCells().run(); setContextMenu(null); }} className="px-3 py-2 hover:bg-[#303033] flex items-center gap-2.5 text-left"><span className="material-symbols-outlined text-[15px] opacity-70">merge_type</span> Merge cells</button>
+                  <button onClick={() => { editor?.chain().focus().splitCell().run(); setContextMenu(null); }} className="px-3 py-2 hover:bg-[#303033] flex items-center gap-2.5 text-left"><span className="material-symbols-outlined text-[15px] opacity-70">splitscreen</span> Split cell</button>
+                  <div className="h-[1px] bg-[#303033] mx-1 my-0.5"></div>
+                  <button onClick={() => { editor?.chain().focus().deleteTable().run(); setContextMenu(null); }} className="px-3 py-2 hover:bg-red-500/30 text-red-300 flex items-center gap-2.5 text-left"><span className="material-symbols-outlined text-[15px] opacity-70">delete</span> Delete table</button>
+                </div>
+              )}
+            </>
           )}
         </article>
       </main>
@@ -476,7 +508,7 @@ export default function App() {
             headings.map((h) => {
               const ml = (h.level - 1) * 0.75
               return (
-                <div 
+                <div
                   key={h.id}
                   style={{ marginLeft: `${ml}rem` }}
                   className="text-on-surface/50 hover:text-[#ebcb8b] transition-colors scale-100 hover:scale-105 origin-left transition-transform flex items-start gap-2 cursor-pointer pb-2"
