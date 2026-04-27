@@ -233,3 +233,76 @@ body {
 .custom-scrollbar::-webkit-scrollbar {
     display: none;             /* Chrome, Safari and Opera */
 }
+
+/* Tabbed Layout Styles */
+.tabbed-layout {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.tabbed-content {
+    flex: 1 1 600px;
+    display: flex;
+    flex-direction: column;
+}
+
+.tab-links-grid {
+    --tab-gap: 1rem;
+    --tab-min: 11rem;
+    --tab-max: 18rem;
+    margin-top: 2rem;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: var(--tab-gap);
+}
+
+.tab-links-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--tab-gap);
+    width: 100%;
+}
+
+.tab-link {
+    display: flex;
+    flex-direction: column;
+    flex: 0 1 18rem;
+    min-width: var(--tab-min);
+    max-width: var(--tab-max);
+    aspect-ratio: 1 / 1;
+    padding: 2rem;
+    background: #1f1f22;
+    border: 1px solid #303033;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    cursor: pointer;
+}
+
+.tab-link:hover {
+    border-color: #81a1c1;
+    background: #252529;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.tab-link .material-symbols-outlined {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+    color: #81a1c1;
+}
+
+.tab-link-title {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #e7e5e8;
+}

@@ -22,6 +22,7 @@ function getFiles(dir, basePath) {
       let weight = 999;
       let hideChildren = false;
       let hidden = false;
+      let icon = 'folder';
 
       if (fs.existsSync(indexPath)) {
         const indexContent = fs.readFileSync(indexPath, 'utf-8');
@@ -33,26 +34,34 @@ function getFiles(dir, basePath) {
 
         const weightMatch = indexContent.match(/^weight:\s*(-?\d+)/m);
         if (weightMatch) weight = parseInt(weightMatch[1], 10);
+
+        const iconMatch = indexContent.match(/^icon:\s*["']?([^"'\n]+)["']?/m);
+        if (iconMatch) icon = iconMatch[1];
       }
 
       if (hidden) continue;
+
+      const children = getFiles(fullPath, basePath);
 
       if (hideChildren) {
         result.push({
           name: title,
           type: 'folder-link',
           path: path.relative(basePath, indexPath).replace(/\\/g, '/'),
-          weight
+          weight,
+          icon: icon === 'folder' ? 'description' : icon,
+          children
         });
       } else {
-        const children = getFiles(fullPath, basePath);
         if (children.length > 0) {
           result.push({
             name: title,
             type: 'directory',
             path: path.relative(basePath, fullPath).replace(/\\/g, '/'),
+            indexPath: fs.existsSync(indexPath) ? path.relative(basePath, indexPath).replace(/\\/g, '/') : null,
             children,
-            weight
+            weight,
+            icon
           });
         }
       }
@@ -62,6 +71,7 @@ function getFiles(dir, basePath) {
 
       let title = file.replace('.md', '');
       let weight = 999;
+      let icon = 'description';
 
       const titleMatch = content.match(/^title:\s*["']?([^"'\n]+)["']?/m);
       if (titleMatch) title = titleMatch[1];
@@ -69,11 +79,15 @@ function getFiles(dir, basePath) {
       const weightMatch = content.match(/^weight:\s*(-?\d+)/m);
       if (weightMatch) weight = parseInt(weightMatch[1], 10);
 
+      const iconMatch = content.match(/^icon:\s*["']?([^"'\n]+)["']?/m);
+      if (iconMatch) icon = iconMatch[1];
+
       result.push({
         name: title,
         type: 'file',
         path: path.relative(basePath, fullPath).replace(/\\/g, '/'),
-        weight
+        weight,
+        icon
       });
     }
   }

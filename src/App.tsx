@@ -175,6 +175,69 @@ export default function App() {
   const [isSidebarPinned, setIsSidebarPinned] = useState(true)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
+  const parseFrontmatter = (fm: string) => {
+    const result: any = {}
+    if (!fm) return result
+    const lines = fm.split('\n')
+    lines.forEach(line => {
+      const trimmed = line.trim()
+      if (trimmed === '---') return
+      const match = trimmed.match(/^([^:]+):\s*(.*)$/)
+      if (match) {
+        const key = match[1].trim()
+        let value = match[2].trim()
+        if (value.startsWith('"') && value.endsWith('"')) value = value.slice(1, -1)
+        if (value.startsWith("'") && value.endsWith("'")) value = value.slice(1, -1)
+        result[key] = value
+      }
+    })
+    return result
+  }
+
+  const findNodeByIndexPath = (nodes: any[], indexPath: string): any | null => {
+    if (!indexPath) return null
+    // Normalize path for comparison
+    const normalizedTarget = indexPath.replace(/\\/g, '/').toLowerCase()
+    for (const node of nodes) {
+      const normalizedPath = node.path?.replace(/\\/g, '/').toLowerCase()
+      const normalizedIndexPath = node.indexPath?.replace(/\\/g, '/').toLowerCase()
+      if (normalizedPath === normalizedTarget || normalizedIndexPath === normalizedTarget) return node
+      if (node.children) {
+        const found = findNodeByIndexPath(node.children, indexPath)
+        if (found) return found
+      }
+    }
+    return null
+  }
+
+  const TabbedLinks = ({ nodes }: { nodes: any[] }) => {
+    if (!nodes || nodes.length === 0) return null
+    return (
+      <div className="tab-links-grid">
+        <div className="tab-links-row">
+          {nodes.map((node, i) => (
+            <div
+              key={i}
+              onClick={() => {
+                if (node.type === 'directory' && node.indexPath) {
+                  loadFile(node.indexPath)
+                } else if (node.type === 'file' || node.type === 'folder-link') {
+                  loadFile(node.path)
+                }
+              }}
+              className="tab-link"
+            >
+              <span className="material-symbols-outlined">
+                {node.icon || (node.type === 'directory' || node.type === 'folder-link' ? 'folder' : 'description')}
+              </span>
+              <span className="tab-link-title">{node.name}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   // Track headings for TOC
   const [headings, setHeadings] = useState<{ level: number, text: string, id: string }[]>([])
 
@@ -346,12 +409,18 @@ export default function App() {
         return (
           <div key={node.path || (node.name + i)}>
             <div
-              onClick={() => toggleFolder(node.path)}
+              onClick={() => {
+                toggleFolder(node.path)
+                if (node.indexPath) loadFile(node.indexPath)
+              }}
               style={{ paddingLeft: `${(level + 1) * 1.5}rem` }}
               className="flex items-center text-[#e7e5e8]/70 hover:bg-[#1f1f22] py-2 mt-1 mb-1 hover:text-[#e7e5e8] cursor-pointer transition-colors border-l-[3px] border-transparent"
             >
               <span className="material-symbols-outlined mr-2 text-[16px] transition-transform duration-200" style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}>
                 chevron_right
+              </span>
+              <span className="material-symbols-outlined mr-2 text-[16px] text-[#e7e5e8]/40">
+                {node.icon || 'folder'}
               </span>
               <span className="text-[10px] font-bold tracking-widest uppercase">{node.name}</span>
             </div>
@@ -365,14 +434,17 @@ export default function App() {
         return (
           <div key={node.path || (node.name + i)}>
             <div
-              onClick={() => loadFile(node.path)}
+              onClick={() => {
+                toggleFolder(node.path.split('/').slice(0, -1).join('/'))
+                loadFile(node.path)
+              }}
               style={{ paddingLeft: `${(level + 1) * 1.5}rem` }}
               title={node.path}
               className={`flex items-center py-2 mt-1 mb-1 cursor-pointer transition-colors ${isActive ? 'bg-[#81a1c1]/10 text-[#81a1c1] border-l-[3px] border-[#81a1c1]' : 'text-[#e7e5e8]/70 hover:bg-[#1f1f22] hover:text-[#e7e5e8] border-l-[3px] border-transparent'
                 }`}
             >
               <span className="material-symbols-outlined mr-2 text-[16px]">
-                folder
+                {node.icon || 'folder'}
               </span>
               <span className="text-[10px] font-bold tracking-widest uppercase truncate">{node.name}</span>
             </div>
@@ -389,7 +461,9 @@ export default function App() {
             className={`flex items-center py-2 cursor-pointer transition-all ${isActive ? 'bg-[#81a1c1]/10 text-[#81a1c1] border-l-[3px] border-[#81a1c1]' : 'text-[#e7e5e8]/60 hover:bg-[#1f1f22] hover:text-[#e7e5e8] border-l-[3px] border-transparent'
               }`}
           >
-            <span className="material-symbols-outlined mr-2 text-[14px]">description</span>
+            <span className="material-symbols-outlined mr-2 text-[14px]">
+              {node.icon || 'description'}
+            </span>
             <span className="text-[12px] truncate">{node.name}</span>
           </div>
         )
@@ -472,7 +546,7 @@ export default function App() {
           </span>
         </nav>
 
-        <article className="max-w-4xl mx-auto px-12 mt-8 font-body leading-relaxed pb-40">
+        <article className="max-w-[40rem] mx-auto px-12 mt-8 font-body leading-relaxed pb-40">
           {isLoading ? (
             <div className="text-center mt-32 text-[#e7e5e8]/40 animate-pulse font-['IBM_Plex_Sans'] tracking-widest uppercase text-sm">
               Retrieving Archives...
@@ -490,6 +564,16 @@ export default function App() {
               >
                 <EditorContent editor={editor} />
               </div>
+
+              {activeFile && (() => {
+                const fm = parseFrontmatter(frontmatter)
+                if (fm.type === 'tabbed' || fm.layout === 'tabbed') {
+                  const node = findNodeByIndexPath(fileTree, activeFile)
+                  return <TabbedLinks nodes={node?.children || []} />
+                }
+                return null
+              })()}
+
               <TableTopMenu editor={editor} />
               {contextMenu && contextMenu.show && (
                 <div
