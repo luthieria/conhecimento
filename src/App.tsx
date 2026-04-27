@@ -172,6 +172,8 @@ export default function App() {
   const [isSaving, setIsSaving] = useState(false)
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
   const [frontmatter, setFrontmatter] = useState<string>('')
+  const [isSidebarPinned, setIsSidebarPinned] = useState(true)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   // Track headings for TOC
   const [headings, setHeadings] = useState<{ level: number, text: string, id: string }[]>([])
@@ -397,6 +399,11 @@ export default function App() {
 
   return (
     <>
+      <div
+        className="sidebar-hover-zone"
+        onMouseEnter={() => setIsSidebarOpen(true)}
+      />
+
       <header className="bg-[#0e0e0f] font-['IBM_Plex_Sans'] text-sm tracking-tight fixed w-full top-0 z-50 flex justify-between items-center px-6 py-3 border-b border-[#1f1f22]">
         <div className="flex items-center gap-4">
           <span className="text-xl font-['Ibarra_Real_Nova'] italic text-[#bf616a]">The Curated Manuscript</span>
@@ -413,7 +420,7 @@ export default function App() {
             onClick={saveFile}
             disabled={!activeFile}
             className={`px-4 py-2 rounded-md flex items-center gap-2 text-xs font-semibold transition-all ${!activeFile ? 'opacity-30 cursor-not-allowed text-[#e7e5e8]' :
-                isSaving ? 'bg-[#a3be8c] text-[#0e0e0f]' : 'bg-[#1f1f22] text-[#81a1c1] hover:bg-[#81a1c1]/20'
+              isSaving ? 'bg-[#a3be8c] text-[#0e0e0f]' : 'bg-[#1f1f22] text-[#81a1c1] hover:bg-[#81a1c1]/20'
               }`}
           >
             <span className="material-symbols-outlined text-[16px]">
@@ -424,26 +431,39 @@ export default function App() {
         </div>
       </header>
 
-      <aside className="bg-[#131315] font-['IBM_Plex_Sans'] fixed left-0 h-screen w-72 flex flex-col pt-16 z-40 overflow-y-auto border-r border-[#1f1f22] custom-scrollbar">
-        <div className="px-6 py-8 flex flex-col gap-1 shrink-0">
-          <span className="text-2xl font-bold text-[#e7e5e8]">The Archivist</span>
-          <span className="text-[10px] tracking-[0.2em] opacity-40 uppercase">Local Repository</span>
+      <aside
+        className={`bg-[#131315] font-['IBM_Plex_Sans'] fixed left-0 h-screen w-72 flex flex-col pt-16 z-40 border-r border-[#1f1f22] sidebar-autohide ${isSidebarOpen ? 'is-open' : ''} ${isSidebarPinned ? 'is-pinned' : ''}`}
+        onMouseEnter={() => setIsSidebarOpen(true)}
+        onMouseLeave={() => setIsSidebarOpen(false)}
+      >
+        <button
+          className="sidebar-pin-button"
+          onClick={() => setIsSidebarPinned(!isSidebarPinned)}
+        >
+          <span className="pin-line"></span>
+        </button>
+
+        <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col">
+          <div className="px-6 py-8 flex flex-col gap-1 shrink-0">
+            <span className="text-2xl font-bold text-[#e7e5e8]">The Archivist</span>
+            <span className="text-[10px] tracking-[0.2em] opacity-40 uppercase">Local Repository</span>
+          </div>
+          <div className="px-6 pb-4 shrink-0">
+            <button
+              onClick={createNewFile}
+              className="w-full py-2 bg-primary text-on-primary font-semibold rounded-md text-xs tracking-normal flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+            >
+              <span className="material-symbols-outlined text-[16px]">add</span>
+              New Entry
+            </button>
+          </div>
+          <nav className="flex-1 space-y-0.5 pb-20 select-none">
+            {renderTree(fileTree)}
+          </nav>
         </div>
-        <div className="px-6 pb-4 shrink-0">
-          <button
-            onClick={createNewFile}
-            className="w-full py-2 bg-primary text-on-primary font-semibold rounded-md text-xs tracking-normal flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
-          >
-            <span className="material-symbols-outlined text-[16px]">add</span>
-            New Entry
-          </button>
-        </div>
-        <nav className="flex-1 space-y-0.5 pb-20 select-none">
-          {renderTree(fileTree)}
-        </nav>
       </aside>
 
-      <main className="ml-72 min-h-screen pt-14 pb-32">
+      <main className={`min-h-screen pt-14 pb-32 transition-all duration-[220ms] ease-[cubic-bezier(0.22,0.61,0.36,1)] ${isSidebarPinned ? 'ml-72' : 'ml-0'}`}>
         <nav className="bg-transparent font-['IBM_Plex_Sans'] uppercase text-[10px] tracking-widest font-bold flex items-center px-12 py-8 w-full mt-4">
           <span className="text-[#e7e5e8]/30">Amethyst Content</span>
           <span className="text-[#e7e5e8]/30 mx-3">/</span>

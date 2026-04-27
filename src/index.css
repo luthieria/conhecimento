@@ -155,3 +155,81 @@ body {
     background: rgba(129, 161, 193, 0.2);
     pointer-events: none;
 }
+
+/* Sidebar Autohide Styles */
+.sidebar-autohide {
+    transform: translateX(-100%);
+    transition: transform 220ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.sidebar-autohide.is-open,
+.sidebar-autohide.is-pinned {
+    transform: translateX(0);
+}
+
+.sidebar-hover-zone {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 14px;
+    z-index: 39;
+    background: transparent;
+}
+
+.sidebar-pin-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 50%;
+    right: -28px;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 120px;
+    padding: 0;
+    border: none;
+    border-radius: 0 6px 6px 0;
+    background: transparent;
+    color: #757578;
+    cursor: pointer;
+    z-index: 41;
+    user-select: none;
+    transition: all 0.2s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.sidebar-pin-button span.pin-line {
+    display: block;
+    width: 6px;
+    height: 150px;
+    background-color: currentColor;
+    border-radius: 99px;
+    transition: all 0.2s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.sidebar-pin-button:hover {
+    color: #949eb4;
+}
+
+.sidebar-pin-button:hover span.pin-line {
+    height: 100px;
+}
+
+.is-pinned .sidebar-pin-button {
+    right: 4px;
+    color: #eece8d;
+}
+
+.is-pinned .sidebar-pin-button span.pin-line {
+    height: 100px;
+}
+
+/* Hide scrollbars */
+.custom-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;     /* Firefox */
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+    display: none;             /* Chrome, Safari and Opera */
+}
