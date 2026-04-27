@@ -1,0 +1,72 @@
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        "on-primary-fixed-variant": "#3e5e7b",
+        "on-primary": "#21435f",
+        "surface-container-high": "#1f1f22",
+        "error-dim": "#bb5551",
+        "primary-dim": "#9cbcdd",
+        "tertiary": "#ffecca",
+        "background": "#0e0e0f",
+        "secondary": "#949eb4",
+        "surface-container": "#19191b",
+        "on-tertiary-container": "#634d19",
+        "surface": "#0e0e0f",
+        "outline": "#757578",
+        "secondary-dim": "#949eb4",
+        "primary-fixed": "#cee5ff",
+        "primary": "#a9caeb",
+        "tertiary-dim": "#eece8d",
+        "error": "#ee7d77",
+        "surface-container-lowest": "#000000",
+        "secondary-container": "#323c4e",
+        "on-secondary-fixed-variant": "#525c70",
+        "on-secondary": "#162032",
+        "on-surface": "#e7e5e8",
+        "secondary-fixed": "#d8e3fb",
+        "on-primary-container": "#b3d4f6",
+        "tertiary-fixed": "#fddc9a",
+        "on-surface-variant": "#acaaae",
+        "surface-bright": "#2b2c2f",
+        "inverse-surface": "#fcf8f9",
+        "on-error-container": "#ff9993",
+        "on-primary-fixed": "#20425e",
+        "tertiary-fixed-dim": "#eece8d",
+        "surface-tint": "#a9caeb",
+        "secondary-fixed-dim": "#cad4ec",
+        "on-tertiary-fixed": "#4f3a07",
+        "outline-variant": "#47484b",
+        "error-container": "#7f2927",
+        "surface-variant": "#252628",
+        "surface-dim": "#0e0e0f",
+        "inverse-primary": "#42627f",
+        "surface-container-low": "#131315",
+        "on-secondary-fixed": "#364053",
+        "on-background": "#e7e5e8",
+        "primary-container": "#294965",
+        "on-error": "#490106",
+        "tertiary-container": "#fddc9a",
+        "inverse-on-surface": "#565556",
+        "primary-fixed-dim": "#b7d8fa",
+        "on-tertiary": "#6c5521"
+      },
+      fontFamily: {
+        "headline": ["Ibarra Real Nova", "serif"],
+        "body": ["Ibarra Real Nova", "serif"],
+        "ui": ["IBM Plex Sans", "sans-serif"],
+        "technical": ["Cascadia Mono", "monospace"]
+      },
+      borderRadius: { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }
+    },
+  },
+  plugins: [
+    require('@tailwindcss/typography')
+  ],
+}
