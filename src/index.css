@@ -312,3 +312,15 @@ body {
     font-weight: 500;
     color: #e7e5e8;
 }
+/* Custom Syntax Highlighting in Editor */
+.ProseMirror {
+    color: rgba(231, 229, 232, 0.9);
+}
+
+/* Style for the unicode brackets: ? ? for Wikilinks, ? ? for Hugo Shortcodes */
+.ProseMirror a {
+    color: #81a1c1;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+}

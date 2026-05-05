@@ -553,25 +553,32 @@ export default function App() {
             </div>
           ) : (
             <>
-              <div
-                onContextMenu={(e) => {
-                  if (editor?.isActive('table')) {
-                    e.preventDefault()
-                    setContextMenu({ x: e.clientX, y: e.clientY, show: true })
-                  }
-                }}
-                onClick={() => setContextMenu(null)}
-              >
-                <EditorContent editor={editor} />
-              </div>
-
               {activeFile && (() => {
                 const fm = parseFrontmatter(frontmatter)
-                if (fm.type === 'tabbed' || fm.layout === 'tabbed') {
-                  const node = findNodeByIndexPath(fileTree, activeFile)
-                  return <TabbedLinks nodes={node?.children || []} />
-                }
-                return null
+                const isTabbed = fm.type === 'tabbed' || fm.layout === 'tabbed'
+                
+                return (
+                  <>
+                    {!isTabbed ? (
+                      <div
+                        onContextMenu={(e) => {
+                          if (editor?.isActive('table')) {
+                            e.preventDefault()
+                            setContextMenu({ x: e.clientX, y: e.clientY, show: true })
+                          }
+                        }}
+                        onClick={() => setContextMenu(null)}
+                      >
+                        <EditorContent editor={editor} />
+                      </div>
+                    ) : null}
+                    
+                    {isTabbed && (() => {
+                      const node = findNodeByIndexPath(fileTree, activeFile)
+                      return <TabbedLinks nodes={node?.children || []} />
+                    })()}
+                  </>
+                )
               })()}
 
               <TableTopMenu editor={editor} />
