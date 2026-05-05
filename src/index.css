@@ -333,8 +333,8 @@ body {
 }
 
 .footnote-ref-hidden::before {
-    content: "[" attr(data-footnote) "]";
-    font-size: 14px;
+    content: attr(data-footnote);
+    font-size: 11px;
     vertical-align: super;
     color: #81a1c1;
     font-weight: bold;
@@ -359,6 +359,8 @@ body {
 }
 
 .footnote-def-block {
+    display: block;
+    width: 100%;
     font-size: 0.9em;
     color: #e7e5e8;
     position: relative;
@@ -374,12 +376,13 @@ body {
 }
 
 .footnote-def-identifier-hidden::before {
-    content: "[" attr(data-footnote) "]:";
+    content: "\A" attr(data-footnote) ".";
+    white-space: pre;
     font-size: 14px;
     color: #81a1c1;
     font-weight: bold;
     margin-right: 0.5rem;
-    background: rgba(129, 161, 193, 0.1);
-    padding: 0 4px;
-    border-radius: 4px;
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
 }

@@ -19,39 +19,63 @@ const buildFootnoteDecorations = (doc: any) => {
   const decorations: Decoration[] = []
   let firstFootnotePos = -1
 
+  const footnoteCounter = new Map<string, number>()
+  let currentCount = 1
+
+  // First pass: Find all inline references and assign numbers
   doc.descendants((node: any, pos: number) => {
     if (node.isText && node.text) {
       const refRegex = /\[\^([^\]]+)\](?!:)/g
       let match
       while ((match = refRegex.exec(node.text)) !== null) {
+        const id = match[1]
+        if (!footnoteCounter.has(id)) {
+          footnoteCounter.set(id, currentCount++)
+        }
         decorations.push(
           Decoration.inline(pos + match.index, pos + match.index + match[0].length, {
             class: 'footnote-ref-hidden',
-            'data-footnote': match[1]
+            'data-footnote': String(footnoteCounter.get(id))
+          })
+        )
+      }
+    }
+  })
+
+  // Second pass: Find footnote definitions
+  doc.descendants((node: any, pos: number) => {
+    if (node.isText && node.text) {
+      const defRegex = /\[\^([^\]]+)\]:/g
+      let match
+      while ((match = defRegex.exec(node.text)) !== null) {
+        if (firstFootnotePos === -1) {
+          // Approximate block start for the widget
+          firstFootnotePos = pos - 1
+        }
+        
+        const id = match[1]
+        let num = footnoteCounter.get(id)
+        if (!num) {
+          num = currentCount++
+          footnoteCounter.set(id, num)
+        }
+
+        decorations.push(
+          Decoration.inline(pos + match.index, pos + match.index + match[0].length, {
+            class: 'footnote-def-identifier-hidden',
+            'data-footnote': String(num)
           })
         )
       }
     }
     
+    // Add block styling if the block contains a footnote definition at the start
     if (node.isBlock && node.textContent.match(/^\[\^([^\]]+)\]:/)) {
-      if (firstFootnotePos === -1) {
-        firstFootnotePos = pos
-      }
       decorations.push(
         Decoration.node(pos, pos + node.nodeSize, {
           class: 'footnote-def-block'
         })
       )
-      
-      const match = node.textContent.match(/^\[\^([^\]]+)\]:/)
-      if (match) {
-        decorations.push(
-          Decoration.inline(pos + 1, pos + 1 + match[0].length, {
-            class: 'footnote-def-identifier-hidden',
-            'data-footnote': match[1]
-          })
-        )
-      }
     }
   })
 
