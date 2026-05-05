@@ -12,6 +12,86 @@ import TurndownService from 'turndown'
 import { gfm } from 'turndown-plugin-gfm'
 import { useEffect, useState, useCallback } from 'react'
 import TextAlign from '@tiptap/extension-text-align'
+import { Extension } from '@tiptap/core'
+import { Plugin, PluginKey } from '@tiptap/pm/state'
+import { Decoration, DecorationSet } from '@tiptap/pm/view'
+const buildFootnoteDecorations = (doc: any) => {
+  const decorations: Decoration[] = []
+  let firstFootnotePos = -1
+
+  doc.descendants((node: any, pos: number) => {
+    if (node.isText && node.text) {
+      const refRegex = /\[\^([^\]]+)\](?!:)/g
+      let match
+      while ((match = refRegex.exec(node.text)) !== null) {
+        decorations.push(
+          Decoration.inline(pos + match.index, pos + match.index + match[0].length, {
+            class: 'footnote-ref-hidden',
+            'data-footnote': match[1]
+          })
+        )
+      }
+    }
+    
+    if (node.isBlock && node.textContent.match(/^\[\^([^\]]+)\]:/)) {
+      if (firstFootnotePos === -1) {
+        firstFootnotePos = pos
+      }
+      decorations.push(
+        Decoration.node(pos, pos + node.nodeSize, {
+          class: 'footnote-def-block'
+        })
+      )
+      
+      const match = node.textContent.match(/^\[\^([^\]]+)\]:/)
+      if (match) {
+        decorations.push(
+          Decoration.inline(pos + 1, pos + 1 + match[0].length, {
+            class: 'footnote-def-identifier-hidden',
+            'data-footnote': match[1]
+          })
+        )
+      }
+    }
+  })
+
+  if (firstFootnotePos !== -1) {
+    const widget = document.createElement('div')
+    widget.className = 'footnotes-separator'
+    widget.innerHTML = 'Footnotes'
+    decorations.push(
+      Decoration.widget(firstFootnotePos, widget, { side: -1 })
+    )
+  }
+
+  return DecorationSet.create(doc, decorations)
+}
+
+const FootnoteDecorator = Extension.create({
+  name: 'footnoteDecorator',
+
+  addProseMirrorPlugins() {
+    return [
+      new Plugin({
+        key: new PluginKey('footnoteDecorator'),
+        state: {
+          init(_config, instance) {
+            return buildFootnoteDecorations(instance.doc)
+          },
+          apply(tr, oldState) {
+            if (!tr.docChanged) return oldState.map(tr.mapping, tr.doc)
+            return buildFootnoteDecorations(tr.doc)
+          }
+        },
+        props: {
+          decorations(state) {
+            return this.getState(state)
+          }
+        }
+      })
+    ]
+  }
+})
 
 const CustomTableHeader = TableHeader.extend({
   addAttributes() {
@@ -267,6 +347,7 @@ export default function App() {
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
+      FootnoteDecorator,
     ],
     content: "# The Digital Archivist\n\nSelect a manuscript from your local library on the left to begin editing. Changes will be saved directly to your Amethyst `.md` files.",
     editorProps: {
@@ -326,7 +407,12 @@ export default function App() {
     setIsSaving(true)
 
     const html = editor.getHTML()
-    const turndownService = new TurndownService({ headingStyle: 'atx' })
+    const turndownService = new TurndownService({
+      headingStyle: 'atx',
+      codeBlockStyle: 'fenced',
+      bulletListMarker: '-',
+      emDelimiter: '*',
+    })
     turndownService.use(gfm)
     turndownService.keep(['table', 'tr', 'td', 'th', 'tbody', 'thead', 'colgroup', 'col'])
 

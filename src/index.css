@@ -324,3 +324,62 @@ body {
     text-decoration-thickness: 1px;
     text-underline-offset: 4px;
 }
+
+/* Footnotes Styling */
+.footnote-ref-hidden {
+    font-size: 0;
+    color: transparent;
+    user-select: none;
+}
+
+.footnote-ref-hidden::before {
+    content: "[" attr(data-footnote) "]";
+    font-size: 14px;
+    vertical-align: super;
+    color: #81a1c1;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.footnote-ref-hidden:hover::before {
+    text-decoration: underline;
+}
+
+.footnotes-separator {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #303033;
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    color: #eece8d;
+    font-family: 'IBM Plex Sans', sans-serif;
+    user-select: none;
+}
+
+.footnote-def-block {
+    font-size: 0.9em;
+    color: #e7e5e8;
+    position: relative;
+    padding-left: 1rem;
+    margin-bottom: 0.75rem;
+    line-height: 1.6;
+}
+
+.footnote-def-identifier-hidden {
+    font-size: 0;
+    color: transparent;
+    user-select: none;
+}
+
+.footnote-def-identifier-hidden::before {
+    content: "[" attr(data-footnote) "]:";
+    font-size: 14px;
+    color: #81a1c1;
+    font-weight: bold;
+    margin-right: 0.5rem;
+    background: rgba(129, 161, 193, 0.1);
+    padding: 0 4px;
+    border-radius: 4px;
+}
