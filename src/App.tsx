@@ -384,20 +384,16 @@ export default function App() {
     }
   })
 
-  useEffect(() => {
-    fetch('/api/files')
-      .then(res => res.json())
-      .then(data => setFileTree(data))
-      .catch(console.error)
-  }, [])
-
-  const loadFile = useCallback((path: string) => {
+  const loadFile = useCallback((path: string, updateUrl: boolean = true) => {
     setActiveFile(path)
+    if (updateUrl) {
+      window.history.pushState(null, '', `#${path}`)
+    }
+    
     setIsLoading(true)
     fetch(`/api/file?path=${encodeURIComponent(path)}`)
       .then(res => res.text())
       .then(text => {
-        // Parse frontmatter correctly so it doesn't render in the editor block
         const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*(?:\n|$)/;
         const match = text.match(frontmatterRegex);
 
@@ -411,7 +407,6 @@ export default function App() {
 
         setFrontmatter(fm);
 
-        // Protect Hugo shortcodes and Obsidian Wikilinks from being stripped or escaped by TipTap
         const protectedBody = contentBody
           .replace(/{{</g, 'REPLACE_HUGO_L')
           .replace(/>}}/g, 'REPLACE_HUGO_R')
@@ -425,6 +420,44 @@ export default function App() {
       })
       .finally(() => setIsLoading(false))
   }, [editor])
+
+  useEffect(() => {
+    fetch('/api/files')
+      .then(res => res.json())
+      .then(data => {
+        setFileTree(data)
+        const hash = window.location.hash.slice(1)
+        if (hash) {
+          const decodedPath = decodeURIComponent(hash)
+          loadFile(decodedPath, false)
+          
+          // Expand parent folders automatically
+          const parts = decodedPath.split('/')
+          let currentPath = ''
+          const toExpand = new Set<string>()
+          for (let i = 0; i < parts.length - 1; i++) {
+            currentPath += (currentPath ? '/' : '') + parts[i]
+            toExpand.add(currentPath)
+          }
+          setExpandedFolders(prev => new Set([...prev, ...toExpand]))
+        }
+      })
+      .catch(console.error)
+  }, [loadFile])
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const hash = window.location.hash.slice(1)
+      if (hash) {
+        loadFile(decodeURIComponent(hash), false)
+      } else {
+        setActiveFile(null)
+        if (editor) editor.commands.setContent('')
+      }
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [loadFile, editor])
 
   const saveFile = useCallback(() => {
     if (!activeFile || !editor) return
