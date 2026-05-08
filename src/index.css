@@ -33,17 +33,127 @@ body {
     min-height: 50vh;
 }
 
+/* Paragraphs */
 .ProseMirror p {
-    margin-bottom: 1rem;
+    margin-bottom: 0;
+    margin-top: 0;
     color: rgba(231, 229, 232, 0.9);
     line-height: 1.6;
+    word-wrap: break-word;
+}
+
+.ProseMirror p + p {
+    margin-top: 1em;
+}
+
+.ProseMirror > p {
+    text-indent: 2em;
 }
 
 .ProseMirror td p,
 .ProseMirror th p {
     margin-bottom: 0;
+    text-indent: 0;
 }
 
+/* Unordered lists */
+.ProseMirror ul {
+    list-style-type: disc;
+    padding-inline-start: 2rem;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.ProseMirror ul ul {
+    list-style-type: circle;
+}
+
+.ProseMirror ul ul ul {
+    list-style-type: square;
+}
+
+.ProseMirror ul li {
+    margin-bottom: 0.15em;
+    color: rgba(231, 229, 232, 0.9);
+    line-height: 1.6;
+}
+
+.ProseMirror ul li p,
+.ProseMirror ol li p {
+    text-indent: 0;
+    margin-bottom: 0;
+    margin-top: 0;
+}
+
+/* Ordered lists — nested hierarchical numbering (1., 1.1., 1.2.1., etc.) */
+.ProseMirror ol {
+    list-style-type: none;
+    counter-reset: item1;
+    padding-inline-start: 2.2em;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.ProseMirror ol > li {
+    display: block;
+    position: relative;
+    counter-increment: item1;
+    color: rgba(231, 229, 232, 0.9);
+    line-height: 1.6;
+    margin-bottom: 0.15em;
+}
+
+.ProseMirror ol > li::before {
+    content: counter(item1) ". ";
+    position: absolute;
+    right: 100%;
+    white-space: nowrap;
+    text-align: end;
+    padding-inline-end: 0.5rem;
+}
+
+.ProseMirror ol > li > ol {
+    counter-reset: item2;
+    padding-inline-start: 1.5em;
+}
+
+.ProseMirror ol > li > ol > li {
+    counter-increment: item2;
+}
+
+.ProseMirror ol > li > ol > li::before {
+    content: counter(item1) "." counter(item2) ". ";
+}
+
+.ProseMirror ol > li > ol > li > ol {
+    counter-reset: item3;
+}
+
+.ProseMirror ol > li > ol > li > ol > li {
+    counter-increment: item3;
+}
+
+.ProseMirror ol > li > ol > li > ol > li::before {
+    content: counter(item1) "." counter(item2) "." counter(item3) ". ";
+}
+
+/* Blockquote */
+.ProseMirror blockquote {
+    border-left: 3px solid #d9ca9a;
+    margin-left: 0;
+    padding-left: 1em;
+    transition: border-color 0.2s ease;
+}
+
+/* Horizontal rule */
+.ProseMirror hr {
+    height: 1px;
+    border: none;
+    background: #9ba09d;
+    margin: 1em 0;
+}
+
+/* Headings */
 .ProseMirror h1 {
     font-size: 2.5rem;
     font-weight: 700;
@@ -312,12 +422,13 @@ body {
     font-weight: 500;
     color: #e7e5e8;
 }
+
 /* Custom Syntax Highlighting in Editor */
 .ProseMirror {
     color: rgba(231, 229, 232, 0.9);
 }
 
-/* Style for the unicode brackets: ? ? for Wikilinks, ? ? for Hugo Shortcodes */
+/* Style for the unicode brackets for Wikilinks and Hugo Shortcodes */
 .ProseMirror a {
     color: #81a1c1;
     text-decoration: underline;
