@@ -15,6 +15,8 @@ import TextAlign from '@tiptap/extension-text-align'
 import { Extension } from '@tiptap/core'
 import { Plugin, PluginKey } from '@tiptap/pm/state'
 import { Decoration, DecorationSet } from '@tiptap/pm/view'
+import { MathExtension } from '@aarkue/tiptap-math-extension'
+import 'katex/dist/katex.min.css'
 const buildFootnoteDecorations = (doc: any) => {
   const decorations: Decoration[] = []
   let firstFootnotePos = -1
@@ -371,6 +373,7 @@ export default function App() {
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
+      MathExtension.configure({ evaluation: false }),
       FootnoteDecorator,
     ],
     content: "# The Digital Archivist\n\nSelect a manuscript from your local library on the left to begin editing. Changes will be saved directly to your Amethyst `.md` files.",
@@ -411,7 +414,9 @@ export default function App() {
           .replace(/{{</g, 'REPLACE_HUGO_L')
           .replace(/>}}/g, 'REPLACE_HUGO_R')
           .replace(/\[\[/g, 'REPLACE_WIKI_L')
-          .replace(/\]\]/g, 'REPLACE_WIKI_R');
+          .replace(/\]\]/g, 'REPLACE_WIKI_R')
+          .replace(/\$\$([\s\S]+?)\$\$/g, (_, latex) => `<span data-type="inlineMath" data-latex="${latex.trim().replace(/"/g, '&quot;')}" data-display="yes"></span>`)
+          .replace(/(?<!\$)\$([^$\n]+?)\$(?!\$)/g, (_, latex) => `<span data-type="inlineMath" data-latex="${latex.trim().replace(/"/g, '&quot;')}" data-display="no"></span>`);
 
         if (editor) {
           editor.commands.setContent(protectedBody)
@@ -472,6 +477,17 @@ export default function App() {
     })
     turndownService.use(gfm)
     turndownService.keep(['table', 'tr', 'td', 'th', 'tbody', 'thead', 'colgroup', 'col'])
+
+    turndownService.addRule('inlineMath', {
+      filter: (node: any) => {
+        return node.nodeName === 'SPAN' && node.getAttribute('data-type') === 'inlineMath';
+      },
+      replacement: (content: string, node: any) => {
+        const isDisplay = node.getAttribute('data-display') === 'yes';
+        const latex = node.getAttribute('data-latex');
+        return isDisplay ? `\n$$\n${latex}\n$$\n` : `$${latex}$`;
+      }
+    });
 
     let markdownOutput = turndownService.turndown(html)
 

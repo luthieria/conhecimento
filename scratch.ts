@@ -1,58 +1,14 @@
-import { generateMarkdown, generateHTML } from '@tiptap/html';
-import { Markdown } from 'tiptap-markdown';
-import StarterKit from '@tiptap/starter-kit';
-import { Table } from '@tiptap/extension-table';
-import { TableRow } from '@tiptap/extension-table-row';
-import { TableCell } from '@tiptap/extension-table-cell';
-import { TableHeader } from '@tiptap/extension-table-header';
-import { Editor } from '@tiptap/core';
-
-// We just want to see how an editor instance serializes the markdown.
-const editor = new Editor({
-  extensions: [
-    StarterKit,
-    Table,
-    TableRow,
-    TableCell.extend({
-      addAttributes() {
-        return {
-          ...this.parent?.(),
-          backgroundColor: {
-            default: null,
-            parseHTML: element => element.getAttribute('data-background-color'),
-            renderHTML: attributes => {
-              if (!attributes.backgroundColor) return {};
-              return {
-                'data-background-color': attributes.backgroundColor,
-                style: `background-color: ${attributes.backgroundColor}`
-              };
-            }
-          }
-        };
-      }
-    }),
-    TableHeader,
-    Markdown.configure({
-      html: true
-    })
-  ],
-  content: `
-    <table>
-      <tr>
-        <th colspan="2" data-background-color="#ff0000">Heading</th>
-      </tr>
-      <tr>
-        <td>A1</td>
-        <td>B1</td>
-      </tr>
-    </table>
-  `
+import TurndownService from 'turndown';
+const html = `<span data-type="inlineMath" data-latex="x^2" data-evaluate="no" data-display="yes">$$x^2$$</span><span data-type="inlineMath" data-latex="y^2" data-evaluate="no" data-display="no">$y^2$</span>`;
+const turndownService = new TurndownService();
+turndownService.addRule('inlineMath', {
+  filter: (node, options) => {
+    return node.nodeName === 'SPAN' && node.getAttribute('data-type') === 'inlineMath';
+  },
+  replacement: (content, node, options) => {
+    const isDisplay = node.getAttribute('data-display') === 'yes';
+    const latex = node.getAttribute('data-latex');
+    return isDisplay ? `\n$$\n${latex}\n$$\n` : `$${latex}$`;
+  }
 });
-
-// @ts-ignore
-console.log("MARKDOWN OUTPUT:");
-// @ts-ignore
-console.log(editor.storage.markdown.getMarkdown());
-
-console.log("HTML OUTPUT:");
-console.log(editor.getHTML());
+console.log(turndownService.turndown(html));

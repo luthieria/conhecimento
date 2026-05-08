@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@aarkue/tiptap-math-extension": "^1.4.0",
     "@tiptap/extension-bubble-menu": "^3.22.4",
     "@tiptap/extension-link": "^3.22.5",
     "@tiptap/extension-superscript": "^3.22.5",
@@ -20,6 +21,7 @@
     "@tiptap/extension-text-align": "^3.22.4",
     "@types/d3": "^7.4.3",
     "d3": "^7.9.0",
+    "katex": "^0.16.45",
     "markdown-it-footnote": "^4.0.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
