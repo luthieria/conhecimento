@@ -280,6 +280,8 @@ export default function App() {
   const [frontmatter, setFrontmatter] = useState<string>('')
   const [isSidebarPinned, setIsSidebarPinned] = useState(true)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [viewMode, setViewMode] = useState<'reading' | 'editing'>('reading')
+  const [rawMarkdown, setRawMarkdown] = useState<string>('')
 
   const parseFrontmatter = (fm: string) => {
     const result: any = {}
@@ -376,6 +378,7 @@ export default function App() {
       MathExtension.configure({ evaluation: false }),
       FootnoteDecorator,
     ],
+    editable: false,
     content: "# The Digital Archivist\n\nSelect a manuscript from your local library on the left to begin editing. Changes will be saved directly to your Amethyst `.md` files.",
     editorProps: {
       attributes: {
@@ -402,6 +405,7 @@ export default function App() {
 
         let fm = '';
         let contentBody = text;
+        setRawMarkdown(text);
 
         if (match) {
           fm = match[0];
@@ -464,10 +468,8 @@ export default function App() {
     return () => window.removeEventListener('popstate', handlePopState)
   }, [loadFile, editor])
 
-  const saveFile = useCallback(() => {
-    if (!activeFile || !editor) return
-    setIsSaving(true)
-
+  const getEditorMarkdown = useCallback(() => {
+    if (!editor) return ''
     const html = editor.getHTML()
     const turndownService = new TurndownService({
       headingStyle: 'atx',
@@ -498,7 +500,50 @@ export default function App() {
       .replace(/REPLACE_WIKI_L/g, '[[')
       .replace(/REPLACE_WIKI_R/g, ']]');
 
-    const finalContent = frontmatter + markdownOutput
+    return frontmatter + markdownOutput
+  }, [editor, frontmatter])
+
+  const toggleViewMode = () => {
+    if (viewMode === 'reading') {
+      // Switching to editing: capture current Markdown from editor
+      setRawMarkdown(getEditorMarkdown())
+      setViewMode('editing')
+    } else {
+      // Switching to reading: parse rawMarkdown into editor
+      const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*(?:\n|$)/;
+      const match = rawMarkdown.match(frontmatterRegex);
+
+      let fm = '';
+      let contentBody = rawMarkdown;
+
+      if (match) {
+        fm = match[0];
+        contentBody = rawMarkdown.substring(match[0].length);
+      }
+
+      setFrontmatter(fm);
+
+      const protectedBody = contentBody
+        .replace(/{{</g, 'REPLACE_HUGO_L')
+        .replace(/>}}/g, 'REPLACE_HUGO_R')
+        .replace(/\[\[/g, 'REPLACE_WIKI_L')
+        .replace(/\]\]/g, 'REPLACE_WIKI_R')
+        .replace(/\$\$([\s\S]+?)\$\$/g, (_, latex) => `<span data-type="inlineMath" data-latex="${latex.trim().replace(/"/g, '&quot;')}" data-display="yes"></span>`)
+        .replace(/(?<!\$)\$([^$\n]+?)\$(?!\$)/g, (_, latex) => `<span data-type="inlineMath" data-latex="${latex.trim().replace(/"/g, '&quot;')}" data-display="no"></span>`);
+
+      if (editor) {
+        editor.commands.setContent(protectedBody)
+        setTimeout(() => extractHeadings(editor), 100)
+      }
+      setViewMode('reading')
+    }
+  }
+
+  const saveFile = useCallback(() => {
+    if (!activeFile) return
+    setIsSaving(true)
+
+    const finalContent = viewMode === 'reading' ? getEditorMarkdown() : rawMarkdown
 
     fetch('/api/save', {
       method: 'POST',
@@ -513,7 +558,7 @@ export default function App() {
         setTimeout(() => setIsSaving(false), 2000)
       })
       .catch(console.error)
-  }, [activeFile, editor])
+  }, [activeFile, viewMode, getEditorMarkdown, rawMarkdown])
 
   const toggleFolder = (folderPath: string) => {
     setExpandedFolders(prev => {
@@ -697,12 +742,34 @@ export default function App() {
       </aside>
 
       <main className="min-h-screen pt-14 pb-32 transition-all duration-[220ms] ease-[cubic-bezier(0.22,0.61,0.36,1)] ml-0">
-        <nav className="bg-transparent font-['IBM_Plex_Sans'] uppercase text-[10px] tracking-widest font-bold flex items-center px-12 py-8 w-full mt-4">
-          <span className="text-[#e7e5e8]/30">Amethyst Content</span>
-          <span className="text-[#e7e5e8]/30 mx-3">/</span>
-          <span className="text-[#a3be8c] opacity-100 cursor-default">
-            {activeFile ? activeFile.replace('.md', '').split('/').join(' / ') : 'No Focus'}
-          </span>
+        <nav className="bg-transparent font-['IBM_Plex_Sans'] uppercase text-[10px] tracking-widest font-bold flex items-center justify-between px-12 py-8 w-full mt-4">
+          <div className="flex items-center">
+            <span className="text-[#e7e5e8]/30">Amethyst Content</span>
+            <span className="text-[#e7e5e8]/30 mx-3">/</span>
+            <span className="text-[#a3be8c] opacity-100 cursor-default">
+              {activeFile ? activeFile.replace('.md', '').split('/').join(' / ') : 'No Focus'}
+            </span>
+          </div>
+          {activeFile && (
+            <div className="flex items-center gap-1 bg-[#1f1f22] p-1 rounded-md border border-[#303033]">
+              <button
+                onClick={() => viewMode !== 'reading' && toggleViewMode()}
+                className={`px-3 py-1.5 rounded transition-colors flex items-center gap-2 ${viewMode === 'reading' ? 'bg-[#303033] text-[#e7e5e8]' : 'text-[#e7e5e8]/50 hover:text-[#e7e5e8]'}`}
+                title="Reading / Visual Mode"
+              >
+                <span className="material-symbols-outlined text-[14px]">menu_book</span>
+                Reading
+              </button>
+              <button
+                onClick={() => viewMode !== 'editing' && toggleViewMode()}
+                className={`px-3 py-1.5 rounded transition-colors flex items-center gap-2 ${viewMode === 'editing' ? 'bg-[#303033] text-[#e7e5e8]' : 'text-[#e7e5e8]/50 hover:text-[#e7e5e8]'}`}
+                title="Source / Editing Mode"
+              >
+                <span className="material-symbols-outlined text-[14px]">edit_document</span>
+                Editing
+              </button>
+            </div>
+          )}
         </nav>
 
         <article className="max-w-[40rem] mx-auto px-4 mt-8 font-body leading-relaxed pb-40">
@@ -719,17 +786,26 @@ export default function App() {
                 return (
                   <>
                     {!isTabbed ? (
-                      <div
-                        onContextMenu={(e) => {
-                          if (editor?.isActive('table')) {
-                            e.preventDefault()
-                            setContextMenu({ x: e.clientX, y: e.clientY, show: true })
-                          }
-                        }}
-                        onClick={() => setContextMenu(null)}
-                      >
-                        <EditorContent editor={editor} />
-                      </div>
+                      viewMode === 'reading' ? (
+                        <div
+                          onContextMenu={(e) => {
+                            if (editor?.isActive('table')) {
+                              e.preventDefault()
+                              setContextMenu({ x: e.clientX, y: e.clientY, show: true })
+                            }
+                          }}
+                          onClick={() => setContextMenu(null)}
+                        >
+                          <EditorContent editor={editor} />
+                        </div>
+                      ) : (
+                        <textarea
+                          value={rawMarkdown}
+                          onChange={(e) => setRawMarkdown(e.target.value)}
+                          className="w-full min-h-[60vh] bg-[#1f1f22] text-[#e7e5e8] p-6 rounded-md font-['Fira_Code',monospace] text-sm leading-relaxed border border-[#303033] focus:outline-none focus:border-[#81a1c1] resize-y"
+                          spellCheck={false}
+                        />
+                      )
                     ) : null}
                     
                     {isTabbed && (() => {
