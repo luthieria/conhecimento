@@ -137,6 +137,32 @@ body {
     content: counter(item1) "." counter(item2) "." counter(item3) ". ";
 }
 
+.ProseMirror ol > li > ol > li > ol > li > ol {
+    counter-reset: item4;
+    padding-inline-start: 1.5em;
+}
+
+.ProseMirror ol > li > ol > li > ol > li > ol > li {
+    counter-increment: item4;
+}
+
+.ProseMirror ol > li > ol > li > ol > li > ol > li::before {
+    content: counter(item1) "." counter(item2) "." counter(item3) "." counter(item4) ". ";
+}
+
+.ProseMirror ol > li > ol > li > ol > li > ol > li > ol {
+    counter-reset: item5;
+    padding-inline-start: 1.5em;
+}
+
+.ProseMirror ol > li > ol > li > ol > li > ol > li > ol > li {
+    counter-increment: item5;
+}
+
+.ProseMirror ol > li > ol > li > ol > li > ol > li > ol > li::before {
+    content: counter(item1) "." counter(item2) "." counter(item3) "." counter(item4) "." counter(item5) ". ";
+}
+
 /* Blockquote */
 .ProseMirror blockquote {
     border-left: 3px solid #d9ca9a;
@@ -496,4 +522,119 @@ body {
     background: transparent;
     padding: 0;
     border-radius: 0;
+}
+
+/* ============================================================
+   MISSING MARKDOWN RULES — ported from _markdown.scss
+   ============================================================ */
+
+/* # Images */
+.ProseMirror img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Blendable images */
+.ProseMirror img.blend {
+    filter: invert(1) hue-rotate(180deg);
+    mix-blend-mode: screen;
+}
+
+/* # Heading spacing — add top margin only when headings follow content */
+.ProseMirror p + h1, .ProseMirror ul + h1, .ProseMirror ol + h1,
+.ProseMirror table + h1, .ProseMirror .premium-table-wrapper + h1,
+.ProseMirror p + h2, .ProseMirror ul + h2, .ProseMirror ol + h2,
+.ProseMirror table + h2, .ProseMirror .premium-table-wrapper + h2,
+.ProseMirror p + h3, .ProseMirror ul + h3, .ProseMirror ol + h3,
+.ProseMirror table + h3, .ProseMirror .premium-table-wrapper + h3,
+.ProseMirror p + h4, .ProseMirror ul + h4, .ProseMirror ol + h4,
+.ProseMirror table + h4, .ProseMirror .premium-table-wrapper + h4,
+.ProseMirror p + h5, .ProseMirror ul + h5, .ProseMirror ol + h5,
+.ProseMirror table + h5, .ProseMirror .premium-table-wrapper + h5,
+.ProseMirror p + h6, .ProseMirror ul + h6, .ProseMirror ol + h6,
+.ProseMirror table + h6, .ProseMirror .premium-table-wrapper + h6 {
+    margin-top: 1em;
+}
+
+/* # Text-indent utility overrides */
+/* Items inside .no-indent lose their paragraph indent */
+.ProseMirror .no-indent p {
+    text-indent: 0;
+}
+
+/* Items inside .no-indent-right lose indent and are right-aligned */
+.ProseMirror .no-indent-right p {
+    text-indent: 0;
+    text-align: right;
+    margin: 1rem;
+}
+
+/* # Details / Summary (collapsible sections) */
+.ProseMirror details {
+    padding: 1rem;
+    border: none;
+    font-weight: bold;
+    color: rgba(231, 229, 232, 0.9);
+}
+
+.ProseMirror details summary {
+    line-height: 1;
+    padding: 1rem;
+    margin: -1rem;
+    cursor: pointer;
+    list-style: none;
+}
+
+.ProseMirror details summary::-webkit-details-marker {
+    display: none;
+}
+
+.ProseMirror details[open] summary {
+    margin-bottom: 0;
+}
+
+/* # Figure / Figcaption */
+.ProseMirror figure {
+    margin: 1rem 0;
+}
+
+.ProseMirror figure figcaption p {
+    margin-top: 0;
+    text-indent: 0;
+    text-align: center;
+    font-size: 0.875em;
+    color: rgba(231, 229, 232, 0.6);
+}
+
+/* # Definition Lists */
+.ProseMirror dl dt {
+    font-weight: bolder;
+    margin-top: 1rem;
+    color: rgba(231, 229, 232, 0.9);
+}
+
+.ProseMirror dl dd {
+    margin-inline-start: 0;
+    margin-bottom: 1rem;
+    color: rgba(231, 229, 232, 0.9);
+}
+
+/* # Highlighted code with line numbers — prevent double padding */
+.ProseMirror .highlight table tr td:nth-child(1) pre {
+    margin: 0;
+    padding-inline-end: 0;
+}
+
+.ProseMirror .highlight table tr td:nth-child(2) pre {
+    margin: 0;
+    padding-inline-start: 0;
+}
+
+/* # .markdown-inner — utility to trim leading/trailing margins in nested content */
+.markdown-inner > :first-child {
+    margin-top: 0;
+}
+
+.markdown-inner > :last-child {
+    margin-bottom: 0;
 }
