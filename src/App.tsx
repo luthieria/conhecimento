@@ -12,6 +12,7 @@ import TurndownService from 'turndown'
 import { gfm } from 'turndown-plugin-gfm'
 import { useEffect, useState, useCallback } from 'react'
 import TextAlign from '@tiptap/extension-text-align'
+import Image from '@tiptap/extension-image'
 import { Extension } from '@tiptap/core'
 import { Plugin, PluginKey } from '@tiptap/pm/state'
 import { Decoration, DecorationSet } from '@tiptap/pm/view'
@@ -92,6 +93,61 @@ const buildFootnoteDecorations = (doc: any) => {
 
   return DecorationSet.create(doc, decorations)
 }
+
+const buildSyntaxDecorations = (doc: any) => {
+  const decorations: Decoration[] = []
+  doc.descendants((node: any, pos: number) => {
+    if (node.isText && node.text) {
+      // Shortcodes ⦃...⦄
+      const scRegex = /⦃|⦄/g
+      let match
+      while ((match = scRegex.exec(node.text)) !== null) {
+        decorations.push(
+          Decoration.inline(pos + match.index, pos + match.index + 1, {
+            class: 'shortcode-symbol'
+          })
+        )
+      }
+
+      // Wikilinks ⟦...⟧
+      const wlRegex = /⟦|⟧/g
+      while ((match = wlRegex.exec(node.text)) !== null) {
+        decorations.push(
+          Decoration.inline(pos + match.index, pos + match.index + 1, {
+            class: 'wikilink-symbol'
+          })
+        )
+      }
+    }
+  })
+  return DecorationSet.create(doc, decorations)
+}
+
+const SyntaxDecorator = Extension.create({
+  name: 'syntaxDecorator',
+
+  addProseMirrorPlugins() {
+    return [
+      new Plugin({
+        key: new PluginKey('syntaxDecorator'),
+        state: {
+          init(_config, instance) {
+            return buildSyntaxDecorations(instance.doc)
+          },
+          apply(tr, oldState) {
+            if (!tr.docChanged) return oldState.map(tr.mapping, tr.doc)
+            return buildSyntaxDecorations(tr.doc)
+          }
+        },
+        props: {
+          decorations(state) {
+            return this.getState(state)
+          }
+        }
+      })
+    ]
+  }
+})
 
 const FootnoteDecorator = Extension.create({
   name: 'footnoteDecorator',
@@ -377,6 +433,13 @@ export default function App() {
       }),
       MathExtension.configure({ evaluation: false }),
       FootnoteDecorator,
+      SyntaxDecorator,
+      Image.configure({
+        allowBase64: true,
+        HTMLAttributes: {
+          class: 'max-w-full h-auto rounded-lg shadow-sm',
+        },
+      }),
     ],
     editable: false,
     content: "# The Digital Archivist\n\nSelect a manuscript from your local library on the left to begin editing. Changes will be saved directly to your Amethyst `.md` files.",
@@ -415,10 +478,44 @@ export default function App() {
         setFrontmatter(fm);
 
         const protectedBody = contentBody
-          .replace(/{{</g, 'REPLACE_HUGO_L')
-          .replace(/>}}/g, 'REPLACE_HUGO_R')
-          .replace(/\[\[/g, 'REPLACE_WIKI_L')
-          .replace(/\]\]/g, 'REPLACE_WIKI_R')
+          .replace(/{{[<%]/g, '⦃')
+          .replace(/[>%]}}/g, '⦄')
+          .replace(/\[\[/g, '⟦')
+          .replace(/\]\]/g, '⟧')
+          .replace(/\!⟦(.*?)⟧/g, (_, target) => {
+            // Handle image wikilinks !⟦image.png⟧
+            let imagePath = target.split('|')[0].trim();
+            if (!imagePath.startsWith('/') && !imagePath.startsWith('http')) {
+              const folder = path.includes('/') ? path.split('/').slice(0, -1).join('/') : '';
+              imagePath = folder ? `${folder}/${imagePath}` : imagePath;
+            }
+            return `<img src="/${imagePath}" alt="${target}" data-wikilink="true" />`;
+          })
+          .replace(/\!\[(.*?)\]\((.*?)\)(\{.*?\})?/g, (match, alt, src, attr) => {
+            // Handle standard markdown images ![alt](src){attr}
+            let imagePath = src.trim();
+            
+            // Remove < > if present (Goldmark style)
+            if (imagePath.startsWith('<') && imagePath.endsWith('>')) {
+              imagePath = imagePath.slice(1, -1);
+            }
+
+            // Handle Obsidian/Hugo attributes in alt text (e.g. ![alt|500](src))
+            // We'll strip them for now to ensure path resolution works
+            const cleanAlt = alt.split('|')[0].trim();
+            
+            if (!imagePath.startsWith('/') && !imagePath.startsWith('http')) {
+              const folder = path.includes('/') ? path.split('/').slice(0, -1).join('/') : '';
+              imagePath = folder ? `${folder}/${imagePath}` : imagePath;
+            }
+            
+            // Ensure path starts with / for our middleware
+            const finalPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+            
+            // Return as standard markdown image but with resolved absolute path
+            // Tiptap's Markdown extension will handle this correctly
+            return `![${cleanAlt}](${finalPath})`;
+          })
           .replace(/\$\$([\s\S]+?)\$\$/g, (_, latex) => `<span data-type="inlineMath" data-latex="${latex.trim().replace(/"/g, '&quot;')}" data-display="yes"></span>`)
           .replace(/(?<!\$)\$([^$\n]+?)\$(?!\$)/g, (_, latex) => `<span data-type="inlineMath" data-latex="${latex.trim().replace(/"/g, '&quot;')}" data-display="no"></span>`);
 
@@ -490,15 +587,29 @@ export default function App() {
         return isDisplay ? `\n$$\n${latex}\n$$\n` : `$${latex}$`;
       }
     });
+    
+    turndownService.addRule('image', {
+      filter: 'img',
+      replacement: (content: string, node: any) => {
+        const alt = node.getAttribute('alt') || '';
+        const src = node.getAttribute('src') || '';
+        const isWiki = node.getAttribute('data-wikilink') === 'true';
+        
+        if (isWiki) {
+          return `![[${alt}]]`;
+        }
+        return `![${alt}](${src})`;
+      }
+    });
 
     let markdownOutput = turndownService.turndown(html)
 
-    // Restore the protected syntaxes, removing any escaping Turndown might have theoretically added
+    // Restore the protected syntaxes
     markdownOutput = markdownOutput
-      .replace(/REPLACE_HUGO_L/g, '{{<')
-      .replace(/REPLACE_HUGO_R/g, '>}}')
-      .replace(/REPLACE_WIKI_L/g, '[[')
-      .replace(/REPLACE_WIKI_R/g, ']]');
+      .replace(/⦃/g, '{{<')
+      .replace(/⦄/g, '>}}')
+      .replace(/⟦/g, '[[')
+      .replace(/⟧/g, ']]');
 
     return frontmatter + markdownOutput
   }, [editor, frontmatter])
@@ -524,10 +635,10 @@ export default function App() {
       setFrontmatter(fm);
 
       const protectedBody = contentBody
-        .replace(/{{</g, 'REPLACE_HUGO_L')
-        .replace(/>}}/g, 'REPLACE_HUGO_R')
-        .replace(/\[\[/g, 'REPLACE_WIKI_L')
-        .replace(/\]\]/g, 'REPLACE_WIKI_R')
+        .replace(/{{[<%]/g, '⦃')
+        .replace(/[>%]}}/g, '⦄')
+        .replace(/\[\[/g, '⟦')
+        .replace(/\]\]/g, '⟧')
         .replace(/\$\$([\s\S]+?)\$\$/g, (_, latex) => `<span data-type="inlineMath" data-latex="${latex.trim().replace(/"/g, '&quot;')}" data-display="yes"></span>`)
         .replace(/(?<!\$)\$([^$\n]+?)\$(?!\$)/g, (_, latex) => `<span data-type="inlineMath" data-latex="${latex.trim().replace(/"/g, '&quot;')}" data-display="no"></span>`);
 

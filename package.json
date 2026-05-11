@@ -12,6 +12,7 @@
   "dependencies": {
     "@aarkue/tiptap-math-extension": "^1.4.0",
     "@tiptap/extension-bubble-menu": "^3.22.4",
+    "@tiptap/extension-image": "^3.23.1",
     "@tiptap/extension-link": "^3.22.5",
     "@tiptap/extension-superscript": "^3.22.5",
     "@tiptap/extension-table": "^3.22.4",

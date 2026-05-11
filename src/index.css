@@ -462,6 +462,47 @@ body {
     text-underline-offset: 4px;
 }
 
+.shortcode-symbol, .wikilink-symbol {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-weight: bold;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    margin: 0 1px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    user-select: none;
+}
+
+.shortcode-symbol {
+    color: #d08770; /* Orange/Red for shortcodes */
+    background: rgba(208, 135, 112, 0.1);
+    border: 1px solid rgba(208, 135, 112, 0.2);
+}
+
+.wikilink-symbol {
+    color: #88c0d0; /* Cyan for wikilinks */
+    background: rgba(136, 192, 208, 0.1);
+    border: 1px solid rgba(136, 192, 208, 0.2);
+}
+
+.shortcode-symbol::after {
+    content: "SC";
+    font-size: 8px;
+    position: absolute;
+    top: -10px;
+    opacity: 0.5;
+}
+
+.wikilink-symbol::after {
+    content: "WL";
+    font-size: 8px;
+    position: absolute;
+    top: -10px;
+    opacity: 0.5;
+}
+
 /* Footnotes Styling */
 .footnote-ref-hidden {
     font-size: 0;

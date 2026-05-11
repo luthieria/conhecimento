@@ -108,6 +108,49 @@ export default defineConfig({
       configureServer(server) {
         server.middlewares.use(async (req, res, next) => {
           const basePath = 'd:/Coding/Repositories/amethyst/content/Notas'
+          const staticPath = 'd:/Coding/Repositories/amethyst/static'
+
+          // Serve images and assets from Amethyst
+          const isAsset = /\.(png|jpe?g|gif|svg|webp|pdf|docx?|xlsx?)$/i.test(req.url);
+          if (isAsset) {
+            const urlPath = req.url.split('?')[0];
+            const decodedUrl = decodeURIComponent(urlPath);
+            
+            // Paths to try in order:
+            // 1. Static folder
+            // 2. Content/Notas folder
+            // 3. Absolute path (if it's already absolute on disk)
+            const pathsToTry = [
+              path.join(staticPath, decodedUrl),
+              path.join(basePath, decodedUrl)
+            ];
+
+            console.log(`[Asset] Request: ${req.url}`);
+            
+            for (const fullPath of pathsToTry) {
+              try {
+                if (fs.existsSync(fullPath) && fs.statSync(fullPath).isFile()) {
+                  console.log(`[Asset] Found: ${fullPath}`);
+                  const ext = path.extname(fullPath).toLowerCase().slice(1);
+                  const mimeTypes = {
+                    'png': 'image/png',
+                    'jpg': 'image/jpeg',
+                    'jpeg': 'image/jpeg',
+                    'gif': 'image/gif',
+                    'svg': 'image/svg+xml',
+                    'webp': 'image/webp',
+                    'pdf': 'application/pdf'
+                  };
+                  res.setHeader('Content-Type', mimeTypes[ext] || 'application/octet-stream');
+                  res.end(fs.readFileSync(fullPath));
+                  return;
+                }
+              } catch (e) {
+                // Ignore errors and try next path
+              }
+            }
+            console.log(`[Asset] Not found in any of: ${pathsToTry.join(', ')}`);
+          }
 
           if (req.url === '/api/files' && req.method === 'GET') {
             try {
