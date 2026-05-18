@@ -109,9 +109,10 @@ export default defineConfig({
         server.middlewares.use(async (req, res, next) => {
           const basePath = 'd:/Coding/Repositories/amethyst/content'
           const staticPath = 'd:/Coding/Repositories/amethyst/static'
+          const rootPath = 'd:/Coding/Repositories/amethyst'
 
           // Serve images and assets from Amethyst
-          const isAsset = /\.(png|jpe?g|gif|svg|webp|pdf|docx?|xlsx?)$/i.test(req.url);
+          const isAsset = /\.(png|jpe?g|gif|svg|webp|pdf|docx?|xlsx?|json)$/i.test(req.url);
           if (isAsset) {
             const urlPath = req.url.split('?')[0];
             const decodedUrl = decodeURIComponent(urlPath);
@@ -119,10 +120,11 @@ export default defineConfig({
             // Paths to try in order:
             // 1. Static folder
             // 2. Content folder
-            // 3. Absolute path (if it's already absolute on disk)
+            // 3. Root folder (for /assets/...)
             const pathsToTry = [
               path.join(staticPath, decodedUrl),
-              path.join(basePath, decodedUrl)
+              path.join(basePath, decodedUrl),
+              path.join(rootPath, decodedUrl)
             ];
 
             console.log(`[Asset] Request: ${req.url}`);
@@ -139,7 +141,8 @@ export default defineConfig({
                     'gif': 'image/gif',
                     'svg': 'image/svg+xml',
                     'webp': 'image/webp',
-                    'pdf': 'application/pdf'
+                    'pdf': 'application/pdf',
+                    'json': 'application/json'
                   };
                   res.setHeader('Content-Type', mimeTypes[ext] || 'application/octet-stream');
                   res.end(fs.readFileSync(fullPath));

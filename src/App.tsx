@@ -14,6 +14,7 @@ import { useEffect, useState, useCallback } from 'react'
 import TextAlign from '@tiptap/extension-text-align'
 import Image from '@tiptap/extension-image'
 import { Extension } from '@tiptap/core'
+import GraphView from './components/GraphView'
 import { Plugin, PluginKey } from '@tiptap/pm/state'
 import { Decoration, DecorationSet } from '@tiptap/pm/view'
 import { MathExtension } from '@aarkue/tiptap-math-extension'
@@ -491,7 +492,7 @@ export default function App() {
             }
             return `<img src="/${imagePath}" alt="${target}" data-wikilink="true" />`;
           })
-          .replace(/\!\[(.*?)\]\((.*?)\)(\{.*?\})?/g, (match, alt, src, attr) => {
+          .replace(/\!\[(.*?)\]\((.*?)\)(\{.*?\})?/g, (_, alt, src) => {
             // Handle standard markdown images ![alt](src){attr}
             let imagePath = src.trim();
             
@@ -581,7 +582,7 @@ export default function App() {
       filter: (node: any) => {
         return node.nodeName === 'SPAN' && node.getAttribute('data-type') === 'inlineMath';
       },
-      replacement: (content: string, node: any) => {
+      replacement: (_: string, node: any) => {
         const isDisplay = node.getAttribute('data-display') === 'yes';
         const latex = node.getAttribute('data-latex');
         return isDisplay ? `\n$$\n${latex}\n$$\n` : `$${latex}$`;
@@ -590,7 +591,7 @@ export default function App() {
     
     turndownService.addRule('image', {
       filter: 'img',
-      replacement: (content: string, node: any) => {
+      replacement: (_: string, node: any) => {
         const alt = node.getAttribute('alt') || '';
         const src = node.getAttribute('src') || '';
         const isWiki = node.getAttribute('data-wikilink') === 'true';
@@ -809,7 +810,9 @@ export default function App() {
 
         <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col">
           <div className="px-6 py-8 flex flex-col gap-1 shrink-0">
-            <span className="text-2xl font-bold text-[#e7e5e8]">The Archivist</span>
+            <a href="/" className="text-[#e7e5e8] hover:text-[#a3be8c] transition-colors" title="Home (Graph View)">
+              <span className="material-symbols-outlined text-[32px]">hub</span>
+            </a>
             <span className="text-[10px] tracking-[0.2em] opacity-40 uppercase">Local Repository</span>
           </div>
           <div className="px-6 pb-4 shrink-0">
@@ -828,13 +831,55 @@ export default function App() {
       </aside>
 
       <main className="min-h-screen pb-32 transition-all duration-[220ms] ease-[cubic-bezier(0.22,0.61,0.36,1)] ml-0">
-        <nav className="bg-transparent font-['IBM_Plex_Sans'] uppercase text-[10px] tracking-widest font-bold flex items-center justify-between px-12 py-8 w-full mt-4">
-          <div className="flex items-center">
-            <span className="text-[#e7e5e8]/30">Amethyst Content</span>
-            <span className="text-[#e7e5e8]/30 mx-3">/</span>
-            <span className="text-[#a3be8c] opacity-100 cursor-default">
-              {activeFile ? activeFile.replace('.md', '').split('/').join(' / ') : 'No Focus'}
-            </span>
+        <nav className="relative z-10 bg-transparent font-['IBM_Plex_Sans'] uppercase text-[10px] tracking-widest font-bold flex items-center justify-between px-12 py-8 w-full mt-4">
+          <div className="flex-1" />
+          <div className="absolute left-1/2 -translate-x-1/2 flex items-center whitespace-nowrap overflow-hidden text-ellipsis max-w-[50vw]">
+            {activeFile ? (() => {
+              const parts = activeFile.split('/').filter(p => p !== '_index.md');
+              let cumulativePath = '';
+              return parts.map((part, index) => {
+                // If the original activeFile had _index.md, we still need the cumulative path to find the right nodes,
+                // but wait, if cumulativePath is just the folder, findNodeByIndexPath will still find the folder node!
+                // Let's just build it normally.
+                cumulativePath = cumulativePath ? `${cumulativePath}/${part}` : part;
+                const isLast = index === parts.length - 1;
+                
+                let node = findNodeByIndexPath(fileTree, cumulativePath);
+                if (!node && !part.endsWith('.md')) {
+                  node = findNodeByIndexPath(fileTree, `${cumulativePath}/_index.md`);
+                }
+
+                let displayName = part.replace('.md', '');
+                if (node?.name) {
+                  displayName = node.name;
+                }
+
+                return (
+                  <span key={cumulativePath} className="flex items-center">
+                    {index > 0 && <span className="text-[#e7e5e8]/30 mx-3">/</span>}
+                    <span 
+                      className={`cursor-pointer transition-colors ${isLast ? 'text-[#a3be8c] cursor-default' : 'text-[#e7e5e8]/50 hover:text-[#e7e5e8]'}`}
+                      onClick={() => {
+                         if (isLast) return;
+                         if (!part.endsWith('.md')) {
+                            if (node && node.indexPath) {
+                              loadFile(node.indexPath);
+                            } else {
+                              loadFile(cumulativePath + '/_index.md');
+                            }
+                         } else {
+                            loadFile(cumulativePath);
+                         }
+                      }}
+                    >
+                      {displayName}
+                    </span>
+                  </span>
+                );
+              });
+            })() : (
+              <span className="text-[#a3be8c] opacity-100 cursor-default">No Focus</span>
+            )}
           </div>
           {activeFile && (
             <div className="flex items-center gap-4">
@@ -886,6 +931,11 @@ export default function App() {
             </div>
           ) : (
             <>
+              {!activeFile && (
+                <div className="fixed inset-0 z-0">
+                  <GraphView onNodeClick={loadFile} />
+                </div>
+              )}
               {activeFile && (() => {
                 const fm = parseFrontmatter(frontmatter)
                 const isTabbed = fm.type === 'tabbed' || fm.layout === 'tabbed'
@@ -949,16 +999,14 @@ export default function App() {
         </article>
       </main>
 
-      <nav className="bg-[#1f1f22]/70 backdrop-blur-xl font-['IBM_Plex_Sans'] text-xs italic docked right-4 top-24 w-56 rounded-lg no-border glassmorphism shadow-glow shadow-[0_0_40px_-5px_rgba(231,229,232,0.04)] fixed right-8 top-32 flex flex-col p-4 z-40">
-        <div className="mb-6">
-          <span className="text-sm font-semibold text-[#ebcb8b]">Table of Contents</span>
-          <p className="text-[10px] text-on-surface/40 non-italic mt-1 uppercase tracking-tighter">On this page</p>
-        </div>
-        <div className="flex flex-col gap-4 overflow-y-auto max-h-[60vh] custom-scrollbar">
-          {headings.length === 0 ? (
-            <span className="text-[#e7e5e8]/30 italic text-xs">No section headings</span>
-          ) : (
-            headings.map((h) => {
+      {activeFile && headings.length > 0 && (
+        <nav className="bg-[#1f1f22]/70 backdrop-blur-xl font-['IBM_Plex_Sans'] text-xs italic docked right-4 top-24 w-56 rounded-lg no-border glassmorphism shadow-glow shadow-[0_0_40px_-5px_rgba(231,229,232,0.04)] fixed right-8 top-32 flex flex-col p-4 z-40">
+          <div className="mb-6">
+            <span className="text-sm font-semibold text-[#ebcb8b]">Table of Contents</span>
+            <p className="text-[10px] text-on-surface/40 non-italic mt-1 uppercase tracking-tighter">On this page</p>
+          </div>
+          <div className="flex flex-col gap-4 overflow-y-auto max-h-[60vh] custom-scrollbar">
+            {headings.map((h) => {
               const ml = (h.level - 1) * 0.75
               return (
                 <div
@@ -982,10 +1030,10 @@ export default function App() {
                   </span>
                 </div>
               )
-            })
-          )}
-        </div>
-      </nav>
+            })}
+          </div>
+        </nav>
+      )}
     </>
   )
 }
