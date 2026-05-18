@@ -306,9 +306,9 @@ const TableTopMenu = ({ editor }: { editor: any }) => {
       style={{ top: pos.top - 45, left: pos.left + pos.width / 2, transform: 'translateX(-50%)' }}
       onMouseDown={(e) => e.preventDefault()}
     >
-      <button onClick={() => editor.chain().focus().setTextAlign('left').run()} className={`px-1.5 py-1 rounded transition-colors block leading-tight ${editor.isActive({ textAlign: 'left' }) ? 'bg-[#81a1c1] text-[#0e0e0f]' : 'hover:bg-[#303033]'}`} title="Align Left"><span className="material-symbols-outlined text-[16px]">format_align_left</span></button>
-      <button onClick={() => editor.chain().focus().setTextAlign('center').run()} className={`px-1.5 py-1 rounded transition-colors block leading-tight ${editor.isActive({ textAlign: 'center' }) ? 'bg-[#81a1c1] text-[#0e0e0f]' : 'hover:bg-[#303033]'}`} title="Align Center"><span className="material-symbols-outlined text-[16px]">format_align_center</span></button>
-      <button onClick={() => editor.chain().focus().setTextAlign('right').run()} className={`px-1.5 py-1 rounded transition-colors block leading-tight ${editor.isActive({ textAlign: 'right' }) ? 'bg-[#81a1c1] text-[#0e0e0f]' : 'hover:bg-[#303033]'}`} title="Align Right"><span className="material-symbols-outlined text-[16px]">format_align_right</span></button>
+      <button onClick={() => editor.chain().focus().setTextAlign('left').run()} className={`px-1.5 py-1 rounded transition-colors block leading-tight ${editor.isActive({ textAlign: 'left' }) ? 'bg-[#d9ca9a] text-[#0e0e0f]' : 'hover:bg-[#303033]'}`} title="Align Left"><span className="material-symbols-outlined text-[16px]">format_align_left</span></button>
+      <button onClick={() => editor.chain().focus().setTextAlign('center').run()} className={`px-1.5 py-1 rounded transition-colors block leading-tight ${editor.isActive({ textAlign: 'center' }) ? 'bg-[#d9ca9a] text-[#0e0e0f]' : 'hover:bg-[#303033]'}`} title="Align Center"><span className="material-symbols-outlined text-[16px]">format_align_center</span></button>
+      <button onClick={() => editor.chain().focus().setTextAlign('right').run()} className={`px-1.5 py-1 rounded transition-colors block leading-tight ${editor.isActive({ textAlign: 'right' }) ? 'bg-[#d9ca9a] text-[#0e0e0f]' : 'hover:bg-[#303033]'}`} title="Align Right"><span className="material-symbols-outlined text-[16px]">format_align_right</span></button>
       <div className="w-[2px] h-4 bg-[#303033] mx-0.5 rounded"></div>
       <button onClick={() => editor.chain().focus().setCellAttribute('verticalAlign', 'top').run()} className="px-1.5 py-1 hover:bg-[#303033] rounded transition-colors block leading-tight" title="Align Top"><span className="material-symbols-outlined text-[16px]">vertical_align_top</span></button>
       <button onClick={() => editor.chain().focus().setCellAttribute('verticalAlign', 'middle').run()} className="px-1.5 py-1 hover:bg-[#303033] rounded transition-colors block leading-tight" title="Align Middle"><span className="material-symbols-outlined text-[16px]">vertical_align_center</span></button>
@@ -788,7 +788,7 @@ export default function App() {
                 toggleFolder(node.path.split('/').slice(0, -1).join('/'))
                 loadFile(node.path)
               }}
-              className={`py-1.5 cursor-pointer transition-colors rounded-md pr-4 ${isActive ? 'text-[#81a1c1]' : 'text-[#e7e5e8]/90 hover:text-[#e7e5e8]'}`}
+              className={`py-1.5 cursor-pointer transition-colors rounded-md pr-4 ${isActive ? 'text-[#d9ca9a]' : 'text-[#e7e5e8]/90 hover:text-[#e7e5e8]'}`}
               style={{ display: 'grid', gridTemplateColumns: '36px 1fr auto', alignItems: 'center' }}
             >
               <span />
@@ -810,7 +810,7 @@ export default function App() {
           <div
             key={node.path}
             onClick={() => loadFile(node.path)}
-            className={`py-1.5 cursor-pointer transition-all rounded-md pr-4 ${isActive ? 'text-[#81a1c1]' : 'text-[#e7e5e8]/80 hover:text-[#e7e5e8]'}`}
+            className={`py-1.5 cursor-pointer transition-all rounded-md pr-4 ${isActive ? 'text-[#d9ca9a]' : 'text-[#e7e5e8]/80 hover:text-[#e7e5e8]'}`}
             style={{ display: 'grid', gridTemplateColumns: '36px 1fr', alignItems: 'center' }}
           >
             <span />
@@ -943,7 +943,7 @@ export default function App() {
                 onClick={saveFile}
                 disabled={!activeFile}
                 className={`px-4 py-2 rounded-md flex items-center gap-2 text-xs font-semibold transition-all border border-[#303033] ${!activeFile ? 'opacity-30 cursor-not-allowed text-[#e7e5e8]' :
-                  isSaving ? 'bg-[#a3be8c] text-[#0e0e0f] border-transparent' : 'bg-[#1f1f22] text-[#81a1c1] hover:bg-[#81a1c1]/20'
+                  isSaving ? 'bg-[#a3be8c] text-[#0e0e0f] border-transparent' : 'bg-[#1f1f22] text-[#d9ca9a] hover:bg-[#d9ca9a]/20'
                   }`}
               >
                 <span className="material-symbols-outlined text-[16px]">
@@ -990,7 +990,7 @@ export default function App() {
                         <textarea
                           value={rawMarkdown}
                           onChange={(e) => setRawMarkdown(e.target.value)}
-                          className="w-full min-h-[60vh] bg-[#1f1f22] text-[#e7e5e8] p-6 rounded-md font-['Fira_Code',monospace] text-sm leading-relaxed border border-[#303033] focus:outline-none focus:border-[#81a1c1] resize-y"
+                          className="w-full min-h-[60vh] bg-[#1f1f22] text-[#e7e5e8] p-6 rounded-md font-['Fira_Code',monospace] text-sm leading-relaxed border border-[#303033] focus:outline-none focus:border-[#d9ca9a] resize-y"
                           spellCheck={false}
                         />
                       )

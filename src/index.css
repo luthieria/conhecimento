@@ -180,13 +180,22 @@ body {
 }
 
 /* Headings */
+.ProseMirror h1,
+.ProseMirror h2,
+.ProseMirror h3,
+.ProseMirror h4,
+.ProseMirror h5,
+.ProseMirror h6 {
+    font-family: 'Alegreya SC', serif;
+    font-weight: bold;
+}
+
 .ProseMirror h1 {
     font-size: 2.5rem;
     font-weight: 700;
     color: #bf616a;
     margin-bottom: 1.5rem;
     line-height: 1;
-    font-family: inherit;
     text-align: center;
 }
 
@@ -430,7 +439,7 @@ body {
 }
 
 .tab-link:hover {
-    border-color: #81a1c1;
+    border-color: #d9ca9a;
     background: #252529;
     transform: translateY(-2px);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
@@ -439,7 +448,7 @@ body {
 .tab-link .material-symbols-outlined {
     font-size: 3rem;
     margin-bottom: 0.5rem;
-    color: #81a1c1;
+    color: #d9ca9a;
 }
 
 .tab-link-title {
@@ -456,7 +465,7 @@ body {
 
 /* Style for the unicode brackets for Wikilinks and Hugo Shortcodes */
 .ProseMirror a {
-    color: #81a1c1;
+    color: #d9ca9a;
     text-decoration: underline;
     text-decoration-thickness: 1px;
     text-underline-offset: 4px;
@@ -514,7 +523,7 @@ body {
     content: attr(data-footnote);
     font-size: 11px;
     vertical-align: super;
-    color: #81a1c1;
+    color: #d9ca9a;
     font-weight: bold;
     cursor: pointer;
 }
@@ -557,7 +566,7 @@ body {
     content: "\A" attr(data-footnote) ".";
     white-space: pre;
     font-size: 14px;
-    color: #81a1c1;
+    color: #d9ca9a;
     font-weight: bold;
     margin-right: 0.5rem;
     background: transparent;

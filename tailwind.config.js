@@ -58,9 +58,9 @@ export default {
         "on-tertiary": "#6c5521"
       },
       fontFamily: {
-        "headline": ["Ibarra Real Nova", "serif"],
-        "body": ["Ibarra Real Nova", "serif"],
-        "ui": ["IBM Plex Sans", "sans-serif"],
+        "headline": ["Alegreya SC", "serif"],
+        "body": ["Ibarra Real Nova", "Literaturnaya", "serif"],
+        "ui": ["IBM Plex Sans", "Alegreya Sans", "sans-serif"],
         "technical": ["Cascadia Mono", "monospace"]
       },
       borderRadius: { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }
