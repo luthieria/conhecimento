@@ -762,9 +762,14 @@ export default function App() {
               </div>
               <span className="text-[13px] opacity-40 ml-2 shrink-0 font-mono">{count}</span>
             </div>
-            <div className={`overflow-hidden transition-all ${isExpanded ? 'block' : 'hidden'}`}>
-              <div className="ml-[13px] pl-[13px] border-l border-[#ffffff]/10">
-                {node.children && renderTree(node.children, level + 1)}
+            <div 
+              className="grid transition-[grid-template-rows] duration-200 ease-in-out"
+              style={{ gridTemplateRows: isExpanded ? '1fr' : '0fr' }}
+            >
+              <div className="overflow-hidden">
+                <div className="ml-[13px] pl-[13px] border-l border-[#ffffff]/10">
+                  {node.children && renderTree(node.children, level + 1)}
+                </div>
               </div>
             </div>
           </div>
