@@ -727,15 +727,15 @@ export default function App() {
   const renderTree = (nodes: any[], level = 0) => {
     return nodes.map((node, i) => {
       const count = getFileCount(node);
-      
+
       if (node.type === 'directory') {
         const isExpanded = expandedFolders.has(node.path)
         return (
           <div key={node.path || (node.name + i)}>
-            <div className="flex items-center justify-between text-[#e7e5e8]/90 hover:bg-[#1f1f22] py-1.5 hover:text-[#e7e5e8] transition-colors rounded-md pr-4">
+            <div className="flex items-center justify-between text-[#e7e5e8]/90 py-1.5 hover:text-[#e7e5e8] transition-colors rounded-md pr-4">
               <div className="flex items-center overflow-hidden w-full">
-                <span 
-                  className="material-symbols-outlined mr-1 text-[18px] transition-transform duration-200 cursor-pointer p-0.5 rounded hover:bg-[#303033]" 
+                <span
+                  className="material-symbols-outlined mr-1 !text-[30px] transition-transform duration-200 cursor-pointer p-0.5 rounded"
                   style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}
                   onClick={(e) => {
                     e.stopPropagation()
@@ -744,7 +744,7 @@ export default function App() {
                 >
                   chevron_right
                 </span>
-                <div 
+                <div
                   className="flex items-center flex-1 cursor-pointer overflow-hidden"
                   onClick={() => {
                     if (node.indexPath) {
@@ -754,16 +754,16 @@ export default function App() {
                     }
                   }}
                 >
-                  <span className="material-symbols-outlined mr-2 text-[18px] text-[#e7e5e8]/50 shrink-0">
+                  <span className="material-symbols-outlined mr-2 !text-[22px] text-[#e7e5e8]/50 shrink-0">
                     {node.icon || 'folder'}
                   </span>
-                  <span className="text-[13px] font-bold truncate">{node.name}</span>
+                  <span className="text-[15px] font-bold truncate">{node.name}</span>
                 </div>
               </div>
-              <span className="text-[11px] opacity-40 ml-2 shrink-0 font-mono">{count}</span>
+              <span className="text-[13px] opacity-40 ml-2 shrink-0 font-mono">{count}</span>
             </div>
             <div className={`overflow-hidden transition-all ${isExpanded ? 'block' : 'hidden'}`}>
-              <div className="ml-[11px] pl-[11px] border-l border-[#ffffff]/10">
+              <div className="ml-[13px] pl-[13px] border-l border-[#ffffff]/10">
                 {node.children && renderTree(node.children, level + 1)}
               </div>
             </div>
@@ -778,15 +778,15 @@ export default function App() {
                 toggleFolder(node.path.split('/').slice(0, -1).join('/'))
                 loadFile(node.path)
               }}
-              className={`flex items-center justify-between py-1.5 cursor-pointer transition-colors rounded-md pr-4 ${isActive ? 'text-[#81a1c1]' : 'text-[#e7e5e8]/90 hover:bg-[#1f1f22] hover:text-[#e7e5e8]'}`}
+              className={`flex items-center justify-between py-1.5 cursor-pointer transition-colors rounded-md pr-4 ${isActive ? 'text-[#81a1c1]' : 'text-[#e7e5e8]/90 hover:text-[#e7e5e8]'}`}
             >
-              <div className="flex items-center overflow-hidden w-full ml-[26px]">
-                <span className="material-symbols-outlined mr-2 text-[18px] shrink-0 text-[#e7e5e8]/50">
+              <div className="flex items-center overflow-hidden w-full ml-[30px]">
+                <span className="material-symbols-outlined mr-2 !text-[22px] shrink-0 text-[#e7e5e8]/50">
                   {node.icon || 'folder'}
                 </span>
-                <span className="text-[13px] font-bold truncate">{node.name}</span>
+                <span className="text-[15px] font-bold truncate">{node.name}</span>
               </div>
-              <span className="text-[11px] opacity-40 ml-2 shrink-0 font-mono">{count}</span>
+              <span className="text-[13px] opacity-40 ml-2 shrink-0 font-mono">{count}</span>
             </div>
           </div>
         )
@@ -796,13 +796,13 @@ export default function App() {
           <div
             key={node.path}
             onClick={() => loadFile(node.path)}
-            className={`flex items-center justify-between py-1.5 cursor-pointer transition-all rounded-md pr-4 ${isActive ? 'text-[#81a1c1]' : 'text-[#e7e5e8]/80 hover:bg-[#1f1f22] hover:text-[#e7e5e8]'}`}
+            className={`flex items-center justify-between py-1.5 cursor-pointer transition-all rounded-md pr-4 ${isActive ? 'text-[#81a1c1]' : 'text-[#e7e5e8]/80 hover:text-[#e7e5e8]'}`}
           >
-            <div className="flex items-center overflow-hidden w-full ml-[26px]">
-              <span className="material-symbols-outlined mr-2 text-[18px] shrink-0 text-[#e7e5e8]/50">
+            <div className="flex items-center overflow-hidden w-full ml-[30px]">
+              <span className="material-symbols-outlined mr-2 !text-[22px] shrink-0 text-[#e7e5e8]/50">
                 {node.icon || 'description'}
               </span>
-              <span className="text-[13px] font-bold truncate">{node.name}</span>
+              <span className="text-[15px] font-bold truncate">{node.name}</span>
             </div>
           </div>
         )
@@ -834,7 +834,7 @@ export default function App() {
         <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col">
           <div className="px-6 pt-2 pb-6 flex flex-col gap-1 shrink-0">
             <a href="/" className="text-[#e7e5e8] hover:text-[#a3be8c] transition-colors" title="Home (Graph View)">
-              <span className="material-symbols-outlined text-[32px]">hub</span>
+              <span className="material-symbols-outlined !text-[32px]">hub</span>
             </a>
           </div>
           <nav className="flex-1 space-y-0.5 pb-20 select-none pl-4">
