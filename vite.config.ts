@@ -107,7 +107,7 @@ export default defineConfig({
       name: 'local-fs-api',
       configureServer(server) {
         server.middlewares.use(async (req, res, next) => {
-          const basePath = 'd:/Coding/Repositories/amethyst/content/Notas'
+          const basePath = 'd:/Coding/Repositories/amethyst/content'
           const staticPath = 'd:/Coding/Repositories/amethyst/static'
 
           // Serve images and assets from Amethyst
@@ -118,7 +118,7 @@ export default defineConfig({
             
             // Paths to try in order:
             // 1. Static folder
-            // 2. Content/Notas folder
+            // 2. Content folder
             // 3. Absolute path (if it's already absolute on disk)
             const pathsToTry = [
               path.join(staticPath, decodedUrl),
