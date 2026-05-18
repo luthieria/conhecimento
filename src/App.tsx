@@ -718,30 +718,54 @@ export default function App() {
       .catch(console.error)
   }
 
+  const getFileCount = (node: any): number => {
+    if (node.type === 'file') return 1;
+    if (!node.children) return 0;
+    return node.children.reduce((acc: number, child: any) => acc + getFileCount(child), 0);
+  }
+
   const renderTree = (nodes: any[], level = 0) => {
     return nodes.map((node, i) => {
+      const count = getFileCount(node);
+      
       if (node.type === 'directory') {
         const isExpanded = expandedFolders.has(node.path)
         return (
           <div key={node.path || (node.name + i)}>
-            <div
-              onClick={() => {
-                toggleFolder(node.path)
-                if (node.indexPath) loadFile(node.indexPath)
-              }}
-              style={{ paddingLeft: `${(level + 1) * 1.5}rem` }}
-              className="flex items-center text-[#e7e5e8]/70 hover:bg-[#1f1f22] py-2 mt-1 mb-1 hover:text-[#e7e5e8] cursor-pointer transition-colors border-l-[3px] border-transparent"
-            >
-              <span className="material-symbols-outlined mr-2 text-[16px] transition-transform duration-200" style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}>
-                chevron_right
-              </span>
-              <span className="material-symbols-outlined mr-2 text-[16px] text-[#e7e5e8]/40">
-                {node.icon || 'folder'}
-              </span>
-              <span className="text-[10px] font-bold tracking-widest uppercase">{node.name}</span>
+            <div className="flex items-center justify-between text-[#e7e5e8]/90 hover:bg-[#1f1f22] py-1.5 hover:text-[#e7e5e8] transition-colors rounded-md pr-4">
+              <div className="flex items-center overflow-hidden w-full">
+                <span 
+                  className="material-symbols-outlined mr-1 text-[18px] transition-transform duration-200 cursor-pointer p-0.5 rounded hover:bg-[#303033]" 
+                  style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    toggleFolder(node.path)
+                  }}
+                >
+                  chevron_right
+                </span>
+                <div 
+                  className="flex items-center flex-1 cursor-pointer overflow-hidden"
+                  onClick={() => {
+                    if (node.indexPath) {
+                      loadFile(node.indexPath)
+                    } else {
+                      toggleFolder(node.path)
+                    }
+                  }}
+                >
+                  <span className="material-symbols-outlined mr-2 text-[18px] text-[#e7e5e8]/50 shrink-0">
+                    {node.icon || 'folder'}
+                  </span>
+                  <span className="text-[13px] font-bold truncate">{node.name}</span>
+                </div>
+              </div>
+              <span className="text-[11px] opacity-40 ml-2 shrink-0 font-mono">{count}</span>
             </div>
             <div className={`overflow-hidden transition-all ${isExpanded ? 'block' : 'hidden'}`}>
-              {node.children && renderTree(node.children, level + 1)}
+              <div className="ml-[11px] pl-[11px] border-l border-[#ffffff]/10">
+                {node.children && renderTree(node.children, level + 1)}
+              </div>
             </div>
           </div>
         )
@@ -754,15 +778,15 @@ export default function App() {
                 toggleFolder(node.path.split('/').slice(0, -1).join('/'))
                 loadFile(node.path)
               }}
-              style={{ paddingLeft: `${(level + 1) * 1.5}rem` }}
-              title={node.path}
-              className={`flex items-center py-2 mt-1 mb-1 cursor-pointer transition-colors ${isActive ? 'bg-[#81a1c1]/10 text-[#81a1c1] border-l-[3px] border-[#81a1c1]' : 'text-[#e7e5e8]/70 hover:bg-[#1f1f22] hover:text-[#e7e5e8] border-l-[3px] border-transparent'
-                }`}
+              className={`flex items-center justify-between py-1.5 cursor-pointer transition-colors rounded-md pr-4 ${isActive ? 'text-[#81a1c1]' : 'text-[#e7e5e8]/90 hover:bg-[#1f1f22] hover:text-[#e7e5e8]'}`}
             >
-              <span className="material-symbols-outlined mr-2 text-[16px]">
-                {node.icon || 'folder'}
-              </span>
-              <span className="text-[10px] font-bold tracking-widest uppercase truncate">{node.name}</span>
+              <div className="flex items-center overflow-hidden w-full ml-[26px]">
+                <span className="material-symbols-outlined mr-2 text-[18px] shrink-0 text-[#e7e5e8]/50">
+                  {node.icon || 'folder'}
+                </span>
+                <span className="text-[13px] font-bold truncate">{node.name}</span>
+              </div>
+              <span className="text-[11px] opacity-40 ml-2 shrink-0 font-mono">{count}</span>
             </div>
           </div>
         )
@@ -772,15 +796,14 @@ export default function App() {
           <div
             key={node.path}
             onClick={() => loadFile(node.path)}
-            style={{ paddingLeft: `${(level + 1) * 1.5 + 1.5}rem` }}
-            title={node.path}
-            className={`flex items-center py-2 cursor-pointer transition-all ${isActive ? 'bg-[#81a1c1]/10 text-[#81a1c1] border-l-[3px] border-[#81a1c1]' : 'text-[#e7e5e8]/60 hover:bg-[#1f1f22] hover:text-[#e7e5e8] border-l-[3px] border-transparent'
-              }`}
+            className={`flex items-center justify-between py-1.5 cursor-pointer transition-all rounded-md pr-4 ${isActive ? 'text-[#81a1c1]' : 'text-[#e7e5e8]/80 hover:bg-[#1f1f22] hover:text-[#e7e5e8]'}`}
           >
-            <span className="material-symbols-outlined mr-2 text-[14px]">
-              {node.icon || 'description'}
-            </span>
-            <span className="text-[12px] truncate">{node.name}</span>
+            <div className="flex items-center overflow-hidden w-full ml-[26px]">
+              <span className="material-symbols-outlined mr-2 text-[18px] shrink-0 text-[#e7e5e8]/50">
+                {node.icon || 'description'}
+              </span>
+              <span className="text-[13px] font-bold truncate">{node.name}</span>
+            </div>
           </div>
         )
       }
@@ -809,22 +832,12 @@ export default function App() {
         </button>
 
         <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col">
-          <div className="px-6 pt-2 pb-8 flex flex-col gap-1 shrink-0">
+          <div className="px-6 pt-2 pb-6 flex flex-col gap-1 shrink-0">
             <a href="/" className="text-[#e7e5e8] hover:text-[#a3be8c] transition-colors" title="Home (Graph View)">
               <span className="material-symbols-outlined text-[32px]">hub</span>
             </a>
-            <span className="text-[10px] tracking-[0.2em] opacity-40 uppercase">Local Repository</span>
           </div>
-          <div className="px-6 pb-4 shrink-0">
-            <button
-              onClick={createNewFile}
-              className="w-full py-2 bg-primary text-on-primary font-semibold rounded-md text-xs tracking-normal flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
-            >
-              <span className="material-symbols-outlined text-[16px]">add</span>
-              New Entry
-            </button>
-          </div>
-          <nav className="flex-1 space-y-0.5 pb-20 select-none">
+          <nav className="flex-1 space-y-0.5 pb-20 select-none pl-4">
             {renderTree(fileTree)}
           </nav>
         </div>
