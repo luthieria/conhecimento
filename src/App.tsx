@@ -392,9 +392,11 @@ export default function App() {
               }}
               className="tab-link"
             >
-              <span className="material-symbols-outlined">
-                {node.icon || (node.type === 'directory' || node.type === 'folder-link' ? 'folder' : 'description')}
-              </span>
+              {node.icon && (
+                <span className="material-symbols-outlined">
+                  {node.icon}
+                </span>
+              )}
               <span className="tab-link-title">{node.name}</span>
             </div>
           ))}
@@ -735,7 +737,7 @@ export default function App() {
             <div className="flex items-center justify-between text-[#e7e5e8]/90 py-1.5 hover:text-[#e7e5e8] transition-colors rounded-md pr-4">
               <div className="flex items-center overflow-hidden w-full">
                 <span
-                  className="material-symbols-outlined mr-1 !text-[30px] transition-transform duration-200 cursor-pointer p-0.5 rounded"
+                  className="material-symbols-outlined mr-1 !text-[32px] transition-transform duration-200 cursor-pointer p-0.5 rounded"
                   style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}
                   onClick={(e) => {
                     e.stopPropagation()
@@ -754,20 +756,22 @@ export default function App() {
                     }
                   }}
                 >
-                  <span className="material-symbols-outlined mr-2 !text-[22px] text-[#e7e5e8]/50 shrink-0">
-                    {node.icon || 'folder'}
-                  </span>
-                  <span className="text-[15px] font-bold truncate">{node.name}</span>
+                  {node.icon && (
+                    <span className="material-symbols-outlined mr-2 !text-[24px] text-[#e7e5e8]/50 shrink-0">
+                      {node.icon}
+                    </span>
+                  )}
+                  <span className="text-[18px] font-bold truncate">{node.name}</span>
                 </div>
               </div>
-              <span className="text-[13px] opacity-40 ml-2 shrink-0 font-mono">{count}</span>
+              <span className="text-[15px] opacity-40 ml-2 shrink-0 font-mono">{count}</span>
             </div>
             <div 
               className="grid transition-[grid-template-rows] duration-200 ease-in-out"
               style={{ gridTemplateRows: isExpanded ? '1fr' : '0fr' }}
             >
               <div className="overflow-hidden">
-                <div className="ml-[13px] pl-[13px] border-l border-[#ffffff]/10">
+                <div className="ml-[18px] pl-[18px] border-l border-[#ffffff]/10">
                   {node.children && renderTree(node.children, level + 1)}
                 </div>
               </div>
@@ -785,13 +789,15 @@ export default function App() {
               }}
               className={`flex items-center justify-between py-1.5 cursor-pointer transition-colors rounded-md pr-4 ${isActive ? 'text-[#81a1c1]' : 'text-[#e7e5e8]/90 hover:text-[#e7e5e8]'}`}
             >
-              <div className="flex items-center overflow-hidden w-full ml-[30px]">
-                <span className="material-symbols-outlined mr-2 !text-[22px] shrink-0 text-[#e7e5e8]/50">
-                  {node.icon || 'folder'}
-                </span>
-                <span className="text-[15px] font-bold truncate">{node.name}</span>
+              <div className="flex items-center overflow-hidden w-full ml-[36px]">
+                {node.icon && (
+                  <span className="material-symbols-outlined mr-2 !text-[24px] shrink-0 text-[#e7e5e8]/50">
+                    {node.icon}
+                  </span>
+                )}
+                <span className="text-[18px] font-bold truncate">{node.name}</span>
               </div>
-              <span className="text-[13px] opacity-40 ml-2 shrink-0 font-mono">{count}</span>
+              <span className="text-[15px] opacity-40 ml-2 shrink-0 font-mono">{count}</span>
             </div>
           </div>
         )
@@ -803,11 +809,13 @@ export default function App() {
             onClick={() => loadFile(node.path)}
             className={`flex items-center justify-between py-1.5 cursor-pointer transition-all rounded-md pr-4 ${isActive ? 'text-[#81a1c1]' : 'text-[#e7e5e8]/80 hover:text-[#e7e5e8]'}`}
           >
-            <div className="flex items-center overflow-hidden w-full ml-[30px]">
-              <span className="material-symbols-outlined mr-2 !text-[22px] shrink-0 text-[#e7e5e8]/50">
-                {node.icon || 'description'}
-              </span>
-              <span className="text-[15px] font-bold truncate">{node.name}</span>
+            <div className="flex items-center overflow-hidden w-full ml-[36px]">
+              {node.icon && (
+                <span className="material-symbols-outlined mr-2 !text-[24px] shrink-0 text-[#e7e5e8]/50">
+                  {node.icon}
+                </span>
+              )}
+              <span className="text-[18px] font-bold truncate">{node.name}</span>
             </div>
           </div>
         )
@@ -825,7 +833,7 @@ export default function App() {
 
 
       <aside
-        className={`bg-[#131315] font-['IBM_Plex_Sans'] fixed left-0 h-screen w-72 flex flex-col z-40 border-r border-[#1f1f22] sidebar-autohide ${isSidebarOpen ? 'is-open' : ''} ${isSidebarPinned ? 'is-pinned' : ''}`}
+        className={`bg-[#131315] font-['IBM_Plex_Sans'] fixed left-0 h-screen w-[16rem] flex flex-col z-40 border-r border-[#1f1f22] sidebar-autohide ${isSidebarOpen ? 'is-open' : ''} ${isSidebarPinned ? 'is-pinned' : ''}`}
         onMouseEnter={() => setIsSidebarOpen(true)}
         onMouseLeave={() => setIsSidebarOpen(false)}
       >

@@ -22,7 +22,7 @@ function getFiles(dir, basePath) {
       let weight = 999;
       let hideChildren = false;
       let hidden = false;
-      let icon = 'folder';
+      let icon = null;
 
       if (fs.existsSync(indexPath)) {
         const indexContent = fs.readFileSync(indexPath, 'utf-8');
@@ -49,7 +49,7 @@ function getFiles(dir, basePath) {
           type: 'folder-link',
           path: path.relative(basePath, indexPath).replace(/\\/g, '/'),
           weight,
-          icon: icon === 'folder' ? 'description' : icon,
+          icon,
           children
         });
       } else {
@@ -71,7 +71,7 @@ function getFiles(dir, basePath) {
 
       let title = file.replace('.md', '');
       let weight = 999;
-      let icon = 'description';
+      let icon = null;
 
       const titleMatch = content.match(/^title:\s*["']?([^"'\n]+)["']?/m);
       if (titleMatch) title = titleMatch[1];
