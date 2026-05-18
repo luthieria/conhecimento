@@ -845,12 +845,12 @@ export default function App() {
         </button>
 
         <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col">
-          <div className="px-6 pt-2 pb-6 flex flex-col gap-1 shrink-0">
+          <div className="pl-3.5 pr-6 pt-2 pb-6 flex flex-col gap-1 shrink-0">
             <a href="/" className="text-[#e7e5e8] hover:text-[#a3be8c] transition-colors" title="Home (Graph View)">
               <span className="material-symbols-outlined !text-[32px]">hub</span>
             </a>
           </div>
-          <nav className="flex-1 space-y-0.5 pb-20 select-none pl-4">
+          <nav className="flex-1 space-y-0.5 pb-20 select-none pl-1">
             {renderTree(fileTree)}
           </nav>
         </div>

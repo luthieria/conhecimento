@@ -352,7 +352,7 @@ body {
 }
 
 .is-pinned .sidebar-pin-button {
-    right: 4px;
+    right: -14px;
     color: #eece8d;
 }
 
