@@ -56,7 +56,7 @@ const buildFootnoteDecorations = (doc: any) => {
           // Approximate block start for the widget
           firstFootnotePos = pos - 1
         }
-        
+
         const id = match[1]
         let num = footnoteCounter.get(id)
         if (!num) {
@@ -72,7 +72,7 @@ const buildFootnoteDecorations = (doc: any) => {
         )
       }
     }
-    
+
     // Add block styling if the block contains a footnote definition at the start
     if (node.isBlock && node.textContent.match(/^\[\^([^\]]+)\]:/)) {
       decorations.push(
@@ -459,7 +459,7 @@ export default function App() {
     if (updateUrl) {
       window.history.pushState(null, '', `#${path}`)
     }
-    
+
     setIsLoading(true)
     fetch(`/api/file?path=${encodeURIComponent(path)}`)
       .then(res => res.text())
@@ -495,7 +495,7 @@ export default function App() {
           .replace(/\!\[(.*?)\]\((.*?)\)(\{.*?\})?/g, (_, alt, src) => {
             // Handle standard markdown images ![alt](src){attr}
             let imagePath = src.trim();
-            
+
             // Remove < > if present (Goldmark style)
             if (imagePath.startsWith('<') && imagePath.endsWith('>')) {
               imagePath = imagePath.slice(1, -1);
@@ -504,15 +504,15 @@ export default function App() {
             // Handle Obsidian/Hugo attributes in alt text (e.g. ![alt|500](src))
             // We'll strip them for now to ensure path resolution works
             const cleanAlt = alt.split('|')[0].trim();
-            
+
             if (!imagePath.startsWith('/') && !imagePath.startsWith('http')) {
               const folder = path.includes('/') ? path.split('/').slice(0, -1).join('/') : '';
               imagePath = folder ? `${folder}/${imagePath}` : imagePath;
             }
-            
+
             // Ensure path starts with / for our middleware
             const finalPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
-            
+
             // Return as standard markdown image but with resolved absolute path
             // Tiptap's Markdown extension will handle this correctly
             return `![${cleanAlt}](${finalPath})`;
@@ -537,7 +537,7 @@ export default function App() {
         if (hash) {
           const decodedPath = decodeURIComponent(hash)
           loadFile(decodedPath, false)
-          
+
           // Expand parent folders automatically
           const parts = decodedPath.split('/')
           let currentPath = ''
@@ -588,14 +588,14 @@ export default function App() {
         return isDisplay ? `\n$$\n${latex}\n$$\n` : `$${latex}$`;
       }
     });
-    
+
     turndownService.addRule('image', {
       filter: 'img',
       replacement: (_: string, node: any) => {
         const alt = node.getAttribute('alt') || '';
         const src = node.getAttribute('src') || '';
         const isWiki = node.getAttribute('data-wikilink') === 'true';
-        
+
         if (isWiki) {
           return `![[${alt}]]`;
         }
@@ -809,7 +809,7 @@ export default function App() {
         </button>
 
         <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col">
-          <div className="px-6 py-8 flex flex-col gap-1 shrink-0">
+          <div className="px-6 pt-2 pb-8 flex flex-col gap-1 shrink-0">
             <a href="/" className="text-[#e7e5e8] hover:text-[#a3be8c] transition-colors" title="Home (Graph View)">
               <span className="material-symbols-outlined text-[32px]">hub</span>
             </a>
@@ -831,7 +831,7 @@ export default function App() {
       </aside>
 
       <main className="min-h-screen pb-32 transition-all duration-[220ms] ease-[cubic-bezier(0.22,0.61,0.36,1)] ml-0">
-        <nav className="relative z-10 bg-transparent font-['IBM_Plex_Sans'] uppercase text-[10px] tracking-widest font-bold flex items-center justify-between px-12 py-8 w-full mt-4">
+        <nav className="relative z-10 bg-transparent font-['IBM_Plex_Sans'] uppercase text-[10px] tracking-widest font-bold flex items-center justify-between px-12 pt-2 pb-4 w-full">
           <div className="flex-1" />
           <div className="absolute left-1/2 -translate-x-1/2 flex items-center whitespace-nowrap overflow-hidden text-ellipsis max-w-[50vw]">
             {activeFile ? (() => {
@@ -843,7 +843,7 @@ export default function App() {
                 // Let's just build it normally.
                 cumulativePath = cumulativePath ? `${cumulativePath}/${part}` : part;
                 const isLast = index === parts.length - 1;
-                
+
                 let node = findNodeByIndexPath(fileTree, cumulativePath);
                 if (!node && !part.endsWith('.md')) {
                   node = findNodeByIndexPath(fileTree, `${cumulativePath}/_index.md`);
@@ -857,19 +857,19 @@ export default function App() {
                 return (
                   <span key={cumulativePath} className="flex items-center">
                     {index > 0 && <span className="text-[#e7e5e8]/30 mx-3">/</span>}
-                    <span 
+                    <span
                       className={`cursor-pointer transition-colors ${isLast ? 'text-[#a3be8c] cursor-default' : 'text-[#e7e5e8]/50 hover:text-[#e7e5e8]'}`}
                       onClick={() => {
-                         if (isLast) return;
-                         if (!part.endsWith('.md')) {
-                            if (node && node.indexPath) {
-                              loadFile(node.indexPath);
-                            } else {
-                              loadFile(cumulativePath + '/_index.md');
-                            }
-                         } else {
-                            loadFile(cumulativePath);
-                         }
+                        if (isLast) return;
+                        if (!part.endsWith('.md')) {
+                          if (node && node.indexPath) {
+                            loadFile(node.indexPath);
+                          } else {
+                            loadFile(cumulativePath + '/_index.md');
+                          }
+                        } else {
+                          loadFile(cumulativePath);
+                        }
                       }}
                     >
                       {displayName}
@@ -939,7 +939,7 @@ export default function App() {
               {activeFile && (() => {
                 const fm = parseFrontmatter(frontmatter)
                 const isTabbed = fm.type === 'tabbed' || fm.layout === 'tabbed'
-                
+
                 return (
                   <>
                     {!isTabbed ? (
@@ -964,7 +964,7 @@ export default function App() {
                         />
                       )
                     ) : null}
-                    
+
                     {isTabbed && (() => {
                       const node = findNodeByIndexPath(fileTree, activeFile)
                       return <TabbedLinks nodes={node?.children || []} />
