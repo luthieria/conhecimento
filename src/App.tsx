@@ -793,35 +793,10 @@ export default function App() {
         onMouseEnter={() => setIsSidebarOpen(true)}
       />
 
-      <header className="bg-[#0e0e0f] font-['IBM_Plex_Sans'] text-sm tracking-tight fixed w-full top-0 z-50 flex justify-between items-center px-6 py-3 border-b border-[#1f1f22]">
-        <div className="flex items-center gap-4">
-          <span className="text-xl font-['Ibarra_Real_Nova'] italic text-[#bf616a]">The Curated Manuscript</span>
-        </div>
-        <div className="flex items-center gap-6">
-          <button
-            onClick={() => editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
-            className="px-3 py-1.5 rounded-md flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold transition-all bg-[#1f1f22] text-[#e7e5e8]/70 hover:bg-[#1f1f22]/80 hover:text-[#e7e5e8]"
-          >
-            <span className="material-symbols-outlined text-[14px]">table</span>
-            Insert Table
-          </button>
-          <button
-            onClick={saveFile}
-            disabled={!activeFile}
-            className={`px-4 py-2 rounded-md flex items-center gap-2 text-xs font-semibold transition-all ${!activeFile ? 'opacity-30 cursor-not-allowed text-[#e7e5e8]' :
-              isSaving ? 'bg-[#a3be8c] text-[#0e0e0f]' : 'bg-[#1f1f22] text-[#81a1c1] hover:bg-[#81a1c1]/20'
-              }`}
-          >
-            <span className="material-symbols-outlined text-[16px]">
-              {isSaving ? 'check_circle' : 'save'}
-            </span>
-            {isSaving ? 'Synchronized' : 'Save Manuscript'}
-          </button>
-        </div>
-      </header>
+
 
       <aside
-        className={`bg-[#131315] font-['IBM_Plex_Sans'] fixed left-0 h-screen w-72 flex flex-col pt-16 z-40 border-r border-[#1f1f22] sidebar-autohide ${isSidebarOpen ? 'is-open' : ''} ${isSidebarPinned ? 'is-pinned' : ''}`}
+        className={`bg-[#131315] font-['IBM_Plex_Sans'] fixed left-0 h-screen w-72 flex flex-col z-40 border-r border-[#1f1f22] sidebar-autohide ${isSidebarOpen ? 'is-open' : ''} ${isSidebarPinned ? 'is-pinned' : ''}`}
         onMouseEnter={() => setIsSidebarOpen(true)}
         onMouseLeave={() => setIsSidebarOpen(false)}
       >
@@ -852,7 +827,7 @@ export default function App() {
         </div>
       </aside>
 
-      <main className="min-h-screen pt-14 pb-32 transition-all duration-[220ms] ease-[cubic-bezier(0.22,0.61,0.36,1)] ml-0">
+      <main className="min-h-screen pb-32 transition-all duration-[220ms] ease-[cubic-bezier(0.22,0.61,0.36,1)] ml-0">
         <nav className="bg-transparent font-['IBM_Plex_Sans'] uppercase text-[10px] tracking-widest font-bold flex items-center justify-between px-12 py-8 w-full mt-4">
           <div className="flex items-center">
             <span className="text-[#e7e5e8]/30">Amethyst Content</span>
@@ -862,22 +837,43 @@ export default function App() {
             </span>
           </div>
           {activeFile && (
-            <div className="flex items-center gap-1 bg-[#1f1f22] p-1 rounded-md border border-[#303033]">
+            <div className="flex items-center gap-4">
               <button
-                onClick={() => viewMode !== 'reading' && toggleViewMode()}
-                className={`px-3 py-1.5 rounded transition-colors flex items-center gap-2 ${viewMode === 'reading' ? 'bg-[#303033] text-[#e7e5e8]' : 'text-[#e7e5e8]/50 hover:text-[#e7e5e8]'}`}
-                title="Reading / Visual Mode"
+                onClick={() => editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+                className="px-3 py-1.5 rounded-md flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold transition-all bg-[#1f1f22] text-[#e7e5e8]/70 hover:bg-[#1f1f22]/80 hover:text-[#e7e5e8] border border-[#303033]"
               >
-                <span className="material-symbols-outlined text-[14px]">menu_book</span>
-                Reading
+                <span className="material-symbols-outlined text-[14px]">table</span>
+                Insert Table
               </button>
+              <div className="flex items-center gap-1 bg-[#1f1f22] p-1 rounded-md border border-[#303033]">
+                <button
+                  onClick={() => viewMode !== 'reading' && toggleViewMode()}
+                  className={`px-3 py-1.5 rounded transition-colors flex items-center gap-2 ${viewMode === 'reading' ? 'bg-[#303033] text-[#e7e5e8]' : 'text-[#e7e5e8]/50 hover:text-[#e7e5e8]'}`}
+                  title="Reading / Visual Mode"
+                >
+                  <span className="material-symbols-outlined text-[14px]">menu_book</span>
+                  Reading
+                </button>
+                <button
+                  onClick={() => viewMode !== 'editing' && toggleViewMode()}
+                  className={`px-3 py-1.5 rounded transition-colors flex items-center gap-2 ${viewMode === 'editing' ? 'bg-[#303033] text-[#e7e5e8]' : 'text-[#e7e5e8]/50 hover:text-[#e7e5e8]'}`}
+                  title="Source / Editing Mode"
+                >
+                  <span className="material-symbols-outlined text-[14px]">edit_document</span>
+                  Editing
+                </button>
+              </div>
               <button
-                onClick={() => viewMode !== 'editing' && toggleViewMode()}
-                className={`px-3 py-1.5 rounded transition-colors flex items-center gap-2 ${viewMode === 'editing' ? 'bg-[#303033] text-[#e7e5e8]' : 'text-[#e7e5e8]/50 hover:text-[#e7e5e8]'}`}
-                title="Source / Editing Mode"
+                onClick={saveFile}
+                disabled={!activeFile}
+                className={`px-4 py-2 rounded-md flex items-center gap-2 text-xs font-semibold transition-all border border-[#303033] ${!activeFile ? 'opacity-30 cursor-not-allowed text-[#e7e5e8]' :
+                  isSaving ? 'bg-[#a3be8c] text-[#0e0e0f] border-transparent' : 'bg-[#1f1f22] text-[#81a1c1] hover:bg-[#81a1c1]/20'
+                  }`}
               >
-                <span className="material-symbols-outlined text-[14px]">edit_document</span>
-                Editing
+                <span className="material-symbols-outlined text-[16px]">
+                  {isSaving ? 'check_circle' : 'save'}
+                </span>
+                {isSaving ? 'Synchronized' : 'Save Manuscript'}
               </button>
             </div>
           )}
