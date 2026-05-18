@@ -772,7 +772,7 @@ export default function App() {
               style={{ gridTemplateRows: isExpanded ? '1fr' : '0fr' }}
             >
               <div className="overflow-hidden">
-                <div className="ml-[18px] pl-[18px] border-l border-[#ffffff]/10">
+                <div className="ml-[18px] pl-[4px] border-l border-[#ffffff]/10">
                   {node.children && renderTree(node.children, level + 1)}
                 </div>
               </div>
