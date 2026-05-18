@@ -734,35 +734,36 @@ export default function App() {
         const isExpanded = expandedFolders.has(node.path)
         return (
           <div key={node.path || (node.name + i)}>
-            <div className="flex items-center justify-between text-[#e7e5e8]/90 py-1.5 hover:text-[#e7e5e8] transition-colors rounded-md pr-4">
-              <div className="flex items-center overflow-hidden w-full">
-                <span
-                  className="material-symbols-outlined mr-1 !text-[32px] transition-transform duration-200 cursor-pointer p-0.5 rounded"
-                  style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}
-                  onClick={(e) => {
-                    e.stopPropagation()
+            <div
+              className="py-1.5 text-[#e7e5e8]/90 hover:text-[#e7e5e8] transition-colors rounded-md pr-4"
+              style={{ display: 'grid', gridTemplateColumns: '36px 1fr auto', alignItems: 'center' }}
+            >
+              <span
+                className="material-symbols-outlined !text-[32px] transition-transform duration-200 cursor-pointer p-0.5 rounded justify-self-start"
+                style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  toggleFolder(node.path)
+                }}
+              >
+                chevron_right
+              </span>
+              <div
+                className="flex items-center cursor-pointer overflow-hidden"
+                onClick={() => {
+                  if (node.indexPath) {
+                    loadFile(node.indexPath)
+                  } else {
                     toggleFolder(node.path)
-                  }}
-                >
-                  chevron_right
-                </span>
-                <div
-                  className="flex items-center flex-1 cursor-pointer overflow-hidden"
-                  onClick={() => {
-                    if (node.indexPath) {
-                      loadFile(node.indexPath)
-                    } else {
-                      toggleFolder(node.path)
-                    }
-                  }}
-                >
-                  {node.icon && (
-                    <span className="material-symbols-outlined mr-2 !text-[24px] text-[#e7e5e8]/50 shrink-0">
-                      {node.icon}
-                    </span>
-                  )}
-                  <span className="text-[18px] font-bold truncate">{node.name}</span>
-                </div>
+                  }
+                }}
+              >
+                {node.icon && (
+                  <span className="material-symbols-outlined mr-2 !text-[24px] text-[#e7e5e8]/50 shrink-0">
+                    {node.icon}
+                  </span>
+                )}
+                <span className="text-[18px] font-bold truncate">{node.name}</span>
               </div>
               <span className="text-[15px] opacity-40 ml-2 shrink-0 font-mono">{count}</span>
             </div>
@@ -787,9 +788,11 @@ export default function App() {
                 toggleFolder(node.path.split('/').slice(0, -1).join('/'))
                 loadFile(node.path)
               }}
-              className={`flex items-center justify-between py-1.5 cursor-pointer transition-colors rounded-md pr-4 ${isActive ? 'text-[#81a1c1]' : 'text-[#e7e5e8]/90 hover:text-[#e7e5e8]'}`}
+              className={`py-1.5 cursor-pointer transition-colors rounded-md pr-4 ${isActive ? 'text-[#81a1c1]' : 'text-[#e7e5e8]/90 hover:text-[#e7e5e8]'}`}
+              style={{ display: 'grid', gridTemplateColumns: '36px 1fr auto', alignItems: 'center' }}
             >
-              <div className="flex items-center overflow-hidden w-full ml-[36px]">
+              <span />
+              <div className="flex items-center overflow-hidden">
                 {node.icon && (
                   <span className="material-symbols-outlined mr-2 !text-[24px] shrink-0 text-[#e7e5e8]/50">
                     {node.icon}
@@ -807,9 +810,11 @@ export default function App() {
           <div
             key={node.path}
             onClick={() => loadFile(node.path)}
-            className={`flex items-center justify-between py-1.5 cursor-pointer transition-all rounded-md pr-4 ${isActive ? 'text-[#81a1c1]' : 'text-[#e7e5e8]/80 hover:text-[#e7e5e8]'}`}
+            className={`py-1.5 cursor-pointer transition-all rounded-md pr-4 ${isActive ? 'text-[#81a1c1]' : 'text-[#e7e5e8]/80 hover:text-[#e7e5e8]'}`}
+            style={{ display: 'grid', gridTemplateColumns: '36px 1fr', alignItems: 'center' }}
           >
-            <div className="flex items-center overflow-hidden w-full ml-[36px]">
+            <span />
+            <div className="flex items-center overflow-hidden">
               {node.icon && (
                 <span className="material-symbols-outlined mr-2 !text-[24px] shrink-0 text-[#e7e5e8]/50">
                   {node.icon}
