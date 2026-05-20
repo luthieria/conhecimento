@@ -302,7 +302,7 @@ const TableTopMenu = ({ editor }: { editor: any }) => {
 
   return (
     <div
-      className="fixed z-[60] flex bg-[#1f1f22] backdrop-blur-xl border border-[#303033] rounded-md p-1.5 gap-1.5 text-[#e7e5e8] shadow-lg text-xs font-['IBM_Plex_Sans'] items-center"
+      className="fixed z-[60] flex bg-[#1f1f22] backdrop-blur-xl border border-[#303033] rounded-md p-1.5 gap-1.5 text-[#e7e5e8] shadow-lg text-xs font-ui items-center"
       style={{ top: pos.top - 45, left: pos.left + pos.width / 2, transform: 'translateX(-50%)' }}
       onMouseDown={(e) => e.preventDefault()}
     >
@@ -535,6 +535,12 @@ export default function App() {
       .then(res => res.json())
       .then(data => {
         setFileTree(data)
+
+        // Find top-level directories to expand by default
+        const topLevelDirs = data
+          .filter((node: any) => node.type === 'directory')
+          .map((node: any) => node.path)
+
         const hash = window.location.hash.slice(1)
         if (hash) {
           const decodedPath = decodeURIComponent(hash)
@@ -543,12 +549,14 @@ export default function App() {
           // Expand parent folders automatically
           const parts = decodedPath.split('/')
           let currentPath = ''
-          const toExpand = new Set<string>()
+          const toExpand = new Set<string>(topLevelDirs)
           for (let i = 0; i < parts.length - 1; i++) {
             currentPath += (currentPath ? '/' : '') + parts[i]
             toExpand.add(currentPath)
           }
           setExpandedFolders(prev => new Set([...prev, ...toExpand]))
+        } else {
+          setExpandedFolders(prev => new Set([...prev, ...topLevelDirs]))
         }
       })
       .catch(console.error)
@@ -838,7 +846,7 @@ export default function App() {
 
 
       <aside
-        className={`bg-[#131315] font-['IBM_Plex_Sans'] fixed left-0 h-screen w-[16rem] flex flex-col z-40 border-r border-[#1f1f22] sidebar-autohide ${isSidebarOpen ? 'is-open' : ''} ${isSidebarPinned ? 'is-pinned' : ''}`}
+        className={`bg-[#131315] font-ui fixed left-0 h-screen w-[16rem] flex flex-col z-40 border-r border-[#1f1f22] sidebar-autohide ${isSidebarOpen ? 'is-open' : ''} ${isSidebarPinned ? 'is-pinned' : ''}`}
         onMouseEnter={() => setIsSidebarOpen(true)}
         onMouseLeave={() => setIsSidebarOpen(false)}
       >
@@ -862,7 +870,7 @@ export default function App() {
       </aside>
 
       <main className="min-h-screen pb-32 transition-all duration-[220ms] ease-[cubic-bezier(0.22,0.61,0.36,1)] ml-0">
-        <nav className="relative z-10 bg-transparent font-['IBM_Plex_Sans'] uppercase text-[10px] tracking-widest font-bold flex items-center justify-between px-12 pt-2 pb-4 w-full">
+        <nav className="relative z-10 bg-transparent font-ui uppercase text-[10px] tracking-widest font-bold flex items-center justify-between px-12 pt-2 pb-4 w-full">
           <div className="flex-1" />
           <div className="absolute left-1/2 -translate-x-1/2 flex items-center whitespace-nowrap overflow-hidden text-ellipsis max-w-[50vw]">
             {activeFile ? (() => {
@@ -957,7 +965,7 @@ export default function App() {
 
         <article className="max-w-[40rem] mx-auto px-4 mt-8 font-body leading-relaxed pb-40">
           {isLoading ? (
-            <div className="text-center mt-32 text-[#e7e5e8]/40 animate-pulse font-['IBM_Plex_Sans'] tracking-widest uppercase text-sm">
+            <div className="text-center mt-32 text-[#e7e5e8]/40 animate-pulse font-ui tracking-widest uppercase text-sm">
               Retrieving Archives...
             </div>
           ) : (
@@ -1007,7 +1015,7 @@ export default function App() {
               <TableTopMenu editor={editor} />
               {contextMenu && contextMenu.show && (
                 <div
-                  className="fixed bg-[#1f1f22] border border-[#303033] rounded-md shadow-xl py-1 z-[70] text-[#e7e5e8] text-[11px] font-['IBM_Plex_Sans'] w-48 flex flex-col"
+                  className="fixed bg-[#1f1f22] border border-[#303033] rounded-md shadow-xl py-1 z-[70] text-[#e7e5e8] text-[11px] font-ui w-48 flex flex-col"
                   style={{ top: contextMenu.y, left: contextMenu.x }}
                   onMouseDown={(e) => e.preventDefault()}
                 >
@@ -1031,7 +1039,7 @@ export default function App() {
       </main>
 
       {activeFile && headings.length > 0 && (
-        <nav className="bg-[#1f1f22]/70 backdrop-blur-xl font-['IBM_Plex_Sans'] text-xs italic docked right-4 top-24 w-56 rounded-lg no-border glassmorphism shadow-glow shadow-[0_0_40px_-5px_rgba(231,229,232,0.04)] fixed right-8 top-32 flex flex-col p-4 z-40">
+        <nav className="bg-[#1f1f22]/70 backdrop-blur-xl font-ui text-xs italic docked right-4 top-24 w-56 rounded-lg no-border glassmorphism shadow-glow shadow-[0_0_40px_-5px_rgba(231,229,232,0.04)] fixed right-8 top-32 flex flex-col p-4 z-40">
           <div className="mb-6">
             <span className="text-sm font-semibold text-[#ebcb8b]">Table of Contents</span>
             <p className="text-[10px] text-on-surface/40 non-italic mt-1 uppercase tracking-tighter">On this page</p>
