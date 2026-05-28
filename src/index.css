@@ -42,11 +42,11 @@ body {
     word-wrap: break-word;
 }
 
-.ProseMirror p + p {
+.ProseMirror p+p {
     margin-top: 1em;
 }
 
-.ProseMirror > p {
+.ProseMirror>p {
     text-indent: 2em;
 }
 
@@ -94,7 +94,7 @@ body {
     margin-bottom: 0;
 }
 
-.ProseMirror ol > li {
+.ProseMirror ol>li {
     display: block;
     position: relative;
     counter-increment: item1;
@@ -103,7 +103,7 @@ body {
     margin-bottom: 0.15em;
 }
 
-.ProseMirror ol > li::before {
+.ProseMirror ol>li::before {
     content: counter(item1) ". ";
     position: absolute;
     right: 100%;
@@ -112,54 +112,54 @@ body {
     padding-inline-end: 0.5rem;
 }
 
-.ProseMirror ol > li > ol {
+.ProseMirror ol>li>ol {
     counter-reset: item2;
     padding-inline-start: 1.5em;
 }
 
-.ProseMirror ol > li > ol > li {
+.ProseMirror ol>li>ol>li {
     counter-increment: item2;
 }
 
-.ProseMirror ol > li > ol > li::before {
+.ProseMirror ol>li>ol>li::before {
     content: counter(item1) "." counter(item2) ". ";
 }
 
-.ProseMirror ol > li > ol > li > ol {
+.ProseMirror ol>li>ol>li>ol {
     counter-reset: item3;
 }
 
-.ProseMirror ol > li > ol > li > ol > li {
+.ProseMirror ol>li>ol>li>ol>li {
     counter-increment: item3;
 }
 
-.ProseMirror ol > li > ol > li > ol > li::before {
+.ProseMirror ol>li>ol>li>ol>li::before {
     content: counter(item1) "." counter(item2) "." counter(item3) ". ";
 }
 
-.ProseMirror ol > li > ol > li > ol > li > ol {
+.ProseMirror ol>li>ol>li>ol>li>ol {
     counter-reset: item4;
     padding-inline-start: 1.5em;
 }
 
-.ProseMirror ol > li > ol > li > ol > li > ol > li {
+.ProseMirror ol>li>ol>li>ol>li>ol>li {
     counter-increment: item4;
 }
 
-.ProseMirror ol > li > ol > li > ol > li > ol > li::before {
+.ProseMirror ol>li>ol>li>ol>li>ol>li::before {
     content: counter(item1) "." counter(item2) "." counter(item3) "." counter(item4) ". ";
 }
 
-.ProseMirror ol > li > ol > li > ol > li > ol > li > ol {
+.ProseMirror ol>li>ol>li>ol>li>ol>li>ol {
     counter-reset: item5;
     padding-inline-start: 1.5em;
 }
 
-.ProseMirror ol > li > ol > li > ol > li > ol > li > ol > li {
+.ProseMirror ol>li>ol>li>ol>li>ol>li>ol>li {
     counter-increment: item5;
 }
 
-.ProseMirror ol > li > ol > li > ol > li > ol > li > ol > li::before {
+.ProseMirror ol>li>ol>li>ol>li>ol>li>ol>li::before {
     content: counter(item1) "." counter(item2) "." counter(item3) "." counter(item4) "." counter(item5) ". ";
 }
 
@@ -361,7 +361,7 @@ body {
 }
 
 .is-pinned .sidebar-pin-button {
-    right: -2px;
+    right: 2px;
     color: #eece8d;
 }
 
@@ -371,12 +371,15 @@ body {
 
 /* Hide scrollbars */
 .custom-scrollbar {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;     /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
 }
 
 .custom-scrollbar::-webkit-scrollbar {
-    display: none;             /* Chrome, Safari and Opera */
+    display: none;
+    /* Chrome, Safari and Opera */
 }
 
 /* Tabbed Layout Styles */
@@ -407,11 +410,9 @@ body {
 
 .tab-links-row {
     --tab-count-safe: max(1, var(--tab-count, 1));
-    --tab-basis: clamp(
-        var(--tab-min),
-        calc((100% - (var(--tab-gap) * (var(--tab-count-safe) - 1))) / var(--tab-count-safe)),
-        var(--tab-max)
-    );
+    --tab-basis: clamp(var(--tab-min),
+            calc((100% - (var(--tab-gap) * (var(--tab-count-safe) - 1))) / var(--tab-count-safe)),
+            var(--tab-max));
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
@@ -471,7 +472,8 @@ body {
     text-underline-offset: 4px;
 }
 
-.shortcode-symbol, .wikilink-symbol {
+.shortcode-symbol,
+.wikilink-symbol {
     font-family: 'JetBrains Mono', 'Fira Code', monospace;
     font-weight: bold;
     display: inline-flex;
@@ -485,13 +487,15 @@ body {
 }
 
 .shortcode-symbol {
-    color: #d08770; /* Orange/Red for shortcodes */
+    color: #d08770;
+    /* Orange/Red for shortcodes */
     background: rgba(208, 135, 112, 0.1);
     border: 1px solid rgba(208, 135, 112, 0.2);
 }
 
 .wikilink-symbol {
-    color: #88c0d0; /* Cyan for wikilinks */
+    color: #88c0d0;
+    /* Cyan for wikilinks */
     background: rgba(136, 192, 208, 0.1);
     border: 1px solid rgba(136, 192, 208, 0.2);
 }
@@ -591,18 +595,36 @@ body {
 }
 
 /* # Heading spacing — add top margin only when headings follow content */
-.ProseMirror p + h1, .ProseMirror ul + h1, .ProseMirror ol + h1,
-.ProseMirror table + h1, .ProseMirror .premium-table-wrapper + h1,
-.ProseMirror p + h2, .ProseMirror ul + h2, .ProseMirror ol + h2,
-.ProseMirror table + h2, .ProseMirror .premium-table-wrapper + h2,
-.ProseMirror p + h3, .ProseMirror ul + h3, .ProseMirror ol + h3,
-.ProseMirror table + h3, .ProseMirror .premium-table-wrapper + h3,
-.ProseMirror p + h4, .ProseMirror ul + h4, .ProseMirror ol + h4,
-.ProseMirror table + h4, .ProseMirror .premium-table-wrapper + h4,
-.ProseMirror p + h5, .ProseMirror ul + h5, .ProseMirror ol + h5,
-.ProseMirror table + h5, .ProseMirror .premium-table-wrapper + h5,
-.ProseMirror p + h6, .ProseMirror ul + h6, .ProseMirror ol + h6,
-.ProseMirror table + h6, .ProseMirror .premium-table-wrapper + h6 {
+.ProseMirror p+h1,
+.ProseMirror ul+h1,
+.ProseMirror ol+h1,
+.ProseMirror table+h1,
+.ProseMirror .premium-table-wrapper+h1,
+.ProseMirror p+h2,
+.ProseMirror ul+h2,
+.ProseMirror ol+h2,
+.ProseMirror table+h2,
+.ProseMirror .premium-table-wrapper+h2,
+.ProseMirror p+h3,
+.ProseMirror ul+h3,
+.ProseMirror ol+h3,
+.ProseMirror table+h3,
+.ProseMirror .premium-table-wrapper+h3,
+.ProseMirror p+h4,
+.ProseMirror ul+h4,
+.ProseMirror ol+h4,
+.ProseMirror table+h4,
+.ProseMirror .premium-table-wrapper+h4,
+.ProseMirror p+h5,
+.ProseMirror ul+h5,
+.ProseMirror ol+h5,
+.ProseMirror table+h5,
+.ProseMirror .premium-table-wrapper+h5,
+.ProseMirror p+h6,
+.ProseMirror ul+h6,
+.ProseMirror ol+h6,
+.ProseMirror table+h6,
+.ProseMirror .premium-table-wrapper+h6 {
     margin-top: 1em;
 }
 
@@ -681,10 +703,326 @@ body {
 }
 
 /* # .markdown-inner — utility to trim leading/trailing margins in nested content */
-.markdown-inner > :first-child {
+.markdown-inner> :first-child {
     margin-top: 0;
 }
 
-.markdown-inner > :last-child {
+.markdown-inner> :last-child {
     margin-bottom: 0;
+}
+
+/* ============================================================
+   GLOBE & FULL MAP LAYOUT OVERRIDES
+   ============================================================ */
+
+/* Lock page scrolling while the full-screen globe is active */
+.page-ethno-map-full-active {
+  overflow: hidden !important;
+}
+
+.page-ethno-map-full-active main {
+  height: 100vh !important;
+  min-height: 100vh !important;
+  overflow: hidden !important;
+  padding-bottom: 0 !important;
+}
+
+.page-ethno-map-full-active article {
+  max-width: none !important;
+  width: 100% !important;
+  height: calc(100vh - 60px) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Globe container and stage baseline */
+.ethno-globe-layout,
+.ethno-globe-stage,
+.ethno-globe-svg {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.ethno-globe-layout {
+  margin: 0;
+  position: relative;
+}
+
+.ethno-globe-stage {
+  position: relative;
+  border: 0;
+  border-radius: 0;
+  overflow: hidden;
+  background: transparent;
+  box-shadow: none;
+  isolation: isolate;
+}
+
+.ethno-globe-loading,
+.ethno-globe-error {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1rem;
+  color: rgba(236, 242, 252, 0.74);
+  font-size: 0.72em;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  z-index: 1;
+  pointer-events: none;
+  text-align: center;
+}
+
+.ethno-globe-error {
+  color: rgba(226, 148, 148, 0.95);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.ethno-globe-svg {
+  display: block;
+  cursor: grab;
+  touch-action: none;
+}
+
+/* Drag-state interaction/performance overrides */
+.ethno-globe-stage.is-dragging .ethno-globe-svg {
+  cursor: grabbing;
+}
+
+.ethno-globe-stage.is-dragging .ethno-globe-country,
+.ethno-globe-stage.is-dragging .ethno-globe-borders,
+.ethno-globe-stage.is-dragging .ethno-globe-territory-island,
+.ethno-globe-stage.is-dragging .ethno-globe-link path,
+.ethno-globe-stage.is-dragging .ethno-globe-microstate {
+  transition: none !important;
+}
+
+.ethno-globe-stage.is-dragging .ethno-globe-link.region .ethno-globe-region-halo,
+.ethno-globe-stage.is-dragging .ethno-globe-link.region:hover .ethno-globe-region-halo,
+.ethno-globe-stage.is-dragging .ethno-globe-link.region:focus .ethno-globe-region-halo,
+.ethno-globe-stage.is-dragging .ethno-globe-link.region:focus-visible .ethno-globe-region-halo {
+  opacity: 0.88;
+  filter: blur(4px) drop-shadow(0 0 6px var(--ethno-region-glow, rgba(248, 252, 255, 0.15))) !important;
+}
+
+.ethno-globe-stage.is-dragging .ethno-globe-microstate {
+  filter: none !important;
+  opacity: 0.78;
+}
+
+.ethno-globe-stage.is-dragging .ethno-globe-label-link {
+  pointer-events: none;
+}
+
+/* Base globe geometry layers */
+.ethno-globe-backdrop {
+  fill: #090e14;
+}
+
+.ethno-globe-sphere {
+  fill: #0b1118;
+  filter: drop-shadow(0 0 1rem rgba(198, 218, 255, 0.12));
+}
+
+.ethno-globe-country {
+  fill: rgba(14, 21, 32, 0.8);
+  stroke: rgba(246, 250, 255, 0.11);
+  stroke-width: 0.38;
+  vector-effect: non-scaling-stroke;
+}
+
+.ethno-globe-borders {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.14);
+  stroke-width: 0.36;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+.ethno-globe-coastline {
+  fill: none;
+  stroke: rgba(236, 244, 255, 0.8);
+  stroke-width: 0.5;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+  filter: drop-shadow(0 0 2px rgba(198, 218, 255, 0.14));
+}
+
+.ethno-globe-territory-islands,
+.ethno-globe-microstates {
+  pointer-events: none;
+}
+
+.ethno-globe-territory-island {
+  fill: rgba(17, 25, 37, 0.72);
+  stroke: rgba(240, 248, 255, 0.22);
+  stroke-width: 0.44;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+.ethno-globe-microstate {
+  fill: var(--ethno-micro-fill, rgba(246, 250, 255, 0.32));
+  stroke: var(--ethno-micro-stroke, rgba(246, 250, 255, 0.44));
+  stroke-width: 0.35;
+  vector-effect: non-scaling-stroke;
+  filter: none;
+  opacity: 0.72;
+}
+
+/* Label typography */
+.ethno-globe-labels text {
+  fill: rgba(248, 252, 255, 0.98);
+  font-family: var(--font-sans, sans-serif) !important;
+  font-size: 0.8em !important;
+  font-weight: 650;
+  stroke: none !important;
+  stroke-width: 0 !important;
+  paint-order: normal !important;
+  pointer-events: none;
+  user-select: none;
+  letter-spacing: 0.016em;
+  line-height: 1.1;
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
+  transition: fill 0.16s ease, opacity 0.16s ease;
+}
+
+.ethno-globe-labels .depth-2 {
+  font-size: 0.7em !important;
+}
+
+.ethno-globe-labels .depth-3 {
+  font-size: 0.65em !important;
+}
+
+.ethno-globe-labels .depth-4 {
+  font-size: 0.6em !important;
+}
+
+.ethno-globe-label-link {
+  cursor: pointer;
+  outline: none;
+  text-decoration: none;
+}
+
+.ethno-globe-label-link .ethno-globe-label-chip {
+  fill: rgba(8, 13, 22, 0.64);
+  stroke: rgba(250, 252, 255, 0.3);
+  stroke-width: 1.02;
+  filter: drop-shadow(0 0.28rem 0.92rem rgba(0, 0, 0, 0.29));
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+  transition: fill 0.16s ease, stroke 0.16s ease, filter 0.16s ease, transform 0.16s ease;
+}
+
+.ethno-globe-label-link[data-entry-kind="region"] .ethno-globe-label-chip {
+  stroke-dasharray: 2.4 2.8;
+  stroke-linecap: round;
+}
+
+.page-ethno-map-full-active .ethno-globe-label-link:hover .ethno-globe-label-chip,
+.page-ethno-map-full-active .ethno-globe-label-link:focus .ethno-globe-label-chip,
+.page-ethno-map-full-active .ethno-globe-label-link:focus-visible .ethno-globe-label-chip,
+.page-ethno-map-full-active .ethno-globe-label-link.is-linked-hover .ethno-globe-label-chip,
+.ethno-globe-label-link:hover .ethno-globe-label-chip,
+.ethno-globe-label-link.is-linked-hover .ethno-globe-label-chip {
+  fill: rgba(10, 18, 30, 0.8);
+  stroke: var(--ethno-label-accent, rgba(248, 252, 255, 0.54));
+  filter: drop-shadow(0 0.35rem 1.12rem rgba(0, 0, 0, 0.35)) drop-shadow(0 0 0.45rem var(--ethno-label-chip-glow, rgba(248, 252, 255, 0.24)));
+  transform: translateY(-0.24px);
+}
+
+.ethno-globe-label-link:hover text,
+.ethno-globe-label-link:focus text,
+.ethno-globe-label-link:focus-visible text,
+.ethno-globe-label-link.is-linked-hover text {
+  fill: rgba(254, 255, 255, 1);
+}
+
+.ethno-globe-label-link:focus-visible .ethno-globe-label-chip {
+  filter: drop-shadow(0 0 0.42rem rgba(246, 251, 255, 0.72));
+}
+
+/* Country/region interaction visuals */
+.ethno-globe-link {
+  cursor: pointer;
+  outline: none;
+}
+
+.ethno-globe-link path {
+  vector-effect: non-scaling-stroke;
+  transition: fill 0.16s ease, stroke 0.16s ease, opacity 0.16s ease, filter 0.16s ease, transform 0.16s ease;
+}
+
+.ethno-globe-link.country path {
+  fill: var(--ethno-country-fill, rgba(255, 255, 255, 0.02));
+  stroke: var(--ethno-country-stroke, rgba(255, 255, 255, 0.45));
+  stroke-width: 1.16;
+}
+
+.ethno-globe-link.country:hover path,
+.ethno-globe-link.country:focus path,
+.ethno-globe-link.country.is-linked-hover path {
+  fill: var(--ethno-country-fill-hover, rgba(191, 97, 106, 0.34));
+  stroke: var(--ethno-country-stroke-hover, rgba(248, 252, 255, 0.87));
+}
+
+.ethno-globe-link.region .ethno-globe-region-halo {
+  fill: var(--ethno-region-fill, rgba(255, 255, 255, 0.03));
+  stroke: var(--ethno-region-stroke, rgba(255, 255, 255, 0.12));
+  stroke-width: 3.4;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  opacity: 0.92;
+  pointer-events: none;
+  transform-box: fill-box;
+  transform-origin: center;
+  filter: blur(7px) drop-shadow(0 0 8px var(--ethno-region-glow, rgba(248, 252, 255, 0.18)));
+}
+
+.ethno-globe-link.region .ethno-globe-region-hit {
+  fill: var(--ethno-region-hit-fill, rgba(255, 255, 255, 0.01));
+  stroke: transparent;
+  stroke-width: 0.6;
+}
+
+.ethno-globe-link.region:hover .ethno-globe-region-halo,
+.ethno-globe-link.region:focus .ethno-globe-region-halo,
+.ethno-globe-link.region:focus-visible .ethno-globe-region-halo,
+.ethno-globe-link.region.is-linked-hover .ethno-globe-region-halo {
+  fill: var(--ethno-region-fill-hover, rgba(248, 252, 255, 0.08));
+  stroke: var(--ethno-region-stroke-hover, rgba(248, 252, 255, 0.32));
+  filter: blur(9px) drop-shadow(0 0 13px var(--ethno-region-glow, rgba(248, 252, 255, 0.2)));
+}
+
+.ethno-globe-link.region:hover .ethno-globe-region-hit,
+.ethno-globe-link.region:focus .ethno-globe-region-hit,
+.ethno-globe-link.region:focus-visible .ethno-globe-region-hit,
+.ethno-globe-link.region.is-linked-hover .ethno-globe-region-hit {
+  fill: var(--ethno-region-hit-fill-hover, rgba(255, 255, 255, 0.03));
+}
+
+.ethno-globe-link.country:focus-visible path,
+.ethno-globe-link.region:focus-visible .ethno-globe-region-hit {
+  filter: drop-shadow(0 0 0.28rem rgba(246, 251, 255, 0.82));
+}
+
+/* Mobile-only typography/tooltip adjustments */
+@media screen and (max-width: 56rem) {
+  .ethno-globe-hint {
+    top: 0.08rem !important;
+    font-size: 0.56em !important;
+    max-width: calc(100% - 1.5rem);
+    text-align: center;
+    white-space: normal;
+  }
+
+  .ethno-globe-labels text {
+    font-size: 0.56em !important;
+  }
 }

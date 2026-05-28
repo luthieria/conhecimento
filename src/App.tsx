@@ -15,6 +15,7 @@ import TextAlign from '@tiptap/extension-text-align'
 import Image from '@tiptap/extension-image'
 import { Extension } from '@tiptap/core'
 import GraphView from './components/GraphView'
+import EthnoGlobe from './components/EthnoGlobe'
 import { Plugin, PluginKey } from '@tiptap/pm/state'
 import { Decoration, DecorationSet } from '@tiptap/pm/view'
 import { MathExtension } from '@aarkue/tiptap-math-extension'
@@ -358,6 +359,20 @@ export default function App() {
     })
     return result
   }
+
+  const fm = parseFrontmatter(frontmatter)
+  const isGlobe = !!activeFile && (activeFile.includes('Etnomusicolog') || rawMarkdown.includes('ethno-world-map') || fm.bodyClass === 'page-ethno-map-full' || fm.layout === 'globe')
+
+  useEffect(() => {
+    if (isGlobe) {
+      document.body.classList.add('page-ethno-map-full-active')
+      return () => {
+        document.body.classList.remove('page-ethno-map-full-active')
+      }
+    } else {
+      document.body.classList.remove('page-ethno-map-full-active')
+    }
+  }, [isGlobe])
 
   const findNodeByIndexPath = (nodes: any[], indexPath: string): any | null => {
     if (!indexPath) return null
@@ -743,7 +758,7 @@ export default function App() {
         return (
           <div key={node.path || (node.name + i)}>
             <div
-              className="py-1.5 text-[#e7e5e8]/90 hover:text-[#e7e5e8] transition-colors rounded-md pr-4"
+              className="py-1.5 text-[#e7e5e8]/90 hover:text-[#e7e5e8] transition-colors rounded-md pr-6"
               style={{ display: 'grid', gridTemplateColumns: '36px 1fr auto', alignItems: 'center' }}
             >
               <span
@@ -796,7 +811,7 @@ export default function App() {
                 toggleFolder(node.path.split('/').slice(0, -1).join('/'))
                 loadFile(node.path)
               }}
-              className={`py-1.5 cursor-pointer transition-colors rounded-md pr-4 ${isActive ? 'text-[#d9ca9a]' : 'text-[#e7e5e8]/90 hover:text-[#e7e5e8]'}`}
+              className={`py-1.5 cursor-pointer transition-colors rounded-md pr-6 ${isActive ? 'text-[#d9ca9a]' : 'text-[#e7e5e8]/90 hover:text-[#e7e5e8]'}`}
               style={{ display: 'grid', gridTemplateColumns: '36px 1fr auto', alignItems: 'center' }}
             >
               <span />
@@ -818,7 +833,7 @@ export default function App() {
           <div
             key={node.path}
             onClick={() => loadFile(node.path)}
-            className={`py-1.5 cursor-pointer transition-all rounded-md pr-4 ${isActive ? 'text-[#d9ca9a]' : 'text-[#e7e5e8]/80 hover:text-[#e7e5e8]'}`}
+            className={`py-1.5 cursor-pointer transition-all rounded-md pr-6 ${isActive ? 'text-[#d9ca9a]' : 'text-[#e7e5e8]/80 hover:text-[#e7e5e8]'}`}
             style={{ display: 'grid', gridTemplateColumns: '36px 1fr', alignItems: 'center' }}
           >
             <span />
@@ -869,10 +884,9 @@ export default function App() {
         </div>
       </aside>
 
-      <main className="min-h-screen pb-32 transition-all duration-[220ms] ease-[cubic-bezier(0.22,0.61,0.36,1)] ml-0">
-        <nav className="relative z-10 bg-transparent font-ui uppercase text-[10px] tracking-widest font-bold flex items-center justify-between px-12 pt-2 pb-4 w-full">
-          <div className="flex-1" />
-          <div className="absolute left-1/2 -translate-x-1/2 flex items-center whitespace-nowrap overflow-hidden text-ellipsis max-w-[50vw]">
+      <main className={`min-h-screen pb-32 transition-all duration-[220ms] ease-[cubic-bezier(0.22,0.61,0.36,1)] ${isSidebarPinned ? 'ml-[16rem]' : 'ml-0'}`}>
+        <nav className="relative z-10 bg-transparent font-ui uppercase text-[10px] tracking-widest font-bold flex items-center justify-between px-12 pt-2 pb-4 w-full gap-4">
+          <div className="flex-1 min-w-0 flex items-center whitespace-nowrap overflow-hidden text-ellipsis mr-4">
             {activeFile ? (() => {
               const parts = activeFile.split('/').filter(p => p !== '_index.md');
               let cumulativePath = '';
@@ -919,7 +933,7 @@ export default function App() {
             })() : null}
           </div>
           {activeFile && (
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 shrink-0">
               <button
                 onClick={() => editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
                 className="px-3 py-1.5 rounded-md flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold transition-all bg-[#1f1f22] text-[#e7e5e8]/70 hover:bg-[#1f1f22]/80 hover:text-[#e7e5e8] border border-[#303033]"
@@ -974,12 +988,13 @@ export default function App() {
                 </div>
               )}
               {activeFile && (() => {
-                const fm = parseFrontmatter(frontmatter)
                 const isTabbed = fm.type === 'tabbed' || fm.layout === 'tabbed'
 
                 return (
                   <>
-                    {!isTabbed ? (
+                    {isGlobe ? (
+                      <EthnoGlobe onNavigate={loadFile} />
+                    ) : !isTabbed ? (
                       viewMode === 'reading' ? (
                         <div
                           onContextMenu={(e) => {
@@ -1002,7 +1017,7 @@ export default function App() {
                       )
                     ) : null}
 
-                    {isTabbed && (() => {
+                    {isTabbed && !isGlobe && (() => {
                       const node = findNodeByIndexPath(fileTree, activeFile)
                       return <TabbedLinks nodes={node?.children || []} />
                     })()}
@@ -1036,7 +1051,7 @@ export default function App() {
         </article>
       </main>
 
-      {activeFile && headings.length > 0 && (
+      {activeFile && headings.length > 0 && !isGlobe && (
         <nav className="bg-[#1f1f22]/70 backdrop-blur-xl font-ui text-xs italic docked right-4 top-24 w-56 rounded-lg no-border glassmorphism shadow-glow shadow-[0_0_40px_-5px_rgba(231,229,232,0.04)] fixed right-8 top-32 flex flex-col p-4 z-40">
           <div className="mb-6">
             <span className="text-sm font-semibold text-[#ebcb8b]">Table of Contents</span>
