@@ -20,6 +20,7 @@ import { Plugin, PluginKey } from '@tiptap/pm/state'
 import { Decoration, DecorationSet } from '@tiptap/pm/view'
 import { MathExtension } from '@aarkue/tiptap-math-extension'
 import 'katex/dist/katex.min.css'
+import { MusicNotationNode } from './components/MusicNotationNode'
 const buildFootnoteDecorations = (doc: any) => {
   const decorations: Decoration[] = []
   let firstFootnotePos = -1
@@ -458,6 +459,7 @@ export default function App() {
           class: 'max-w-full h-auto rounded-lg shadow-sm',
         },
       }),
+      MusicNotationNode,
     ],
     editable: false,
     content: "# The Digital Archivist\n\nSelect a manuscript from your local library on the left to begin editing. Changes will be saved directly to your Amethyst `.md` files.",
@@ -533,6 +535,12 @@ export default function App() {
             // Return as standard markdown image but with resolved absolute path
             // Tiptap's Markdown extension will handle this correctly
             return `![${cleanAlt}](${finalPath})`;
+          })
+          .replace(/```(lilypond|musicxml|abc|mei|humdrum)\n([\s\S]*?)```/g, (_, format, content) => {
+            return `<div data-type="musicNotation" data-format="${format}" data-source="${content.trim().replace(/"/g, '&quot;')}"></div>`;
+          })
+          .replace(/⦃<\s*music\s+src="([^"]+)"\s*(?:format="([^"]+)")?\s*>⦄/g, (_, src, format) => {
+            return `<div data-type="musicNotation" data-format="${format || 'lilypond'}" data-src="${src.replace(/"/g, '&quot;')}"></div>`;
           })
           .replace(/\$\$([\s\S]+?)\$\$/g, (_, latex) => `<span data-type="inlineMath" data-latex="${latex.trim().replace(/"/g, '&quot;')}" data-display="yes"></span>`)
           .replace(/(?<!\$)\$([^$\n]+?)\$(?!\$)/g, (_, latex) => `<span data-type="inlineMath" data-latex="${latex.trim().replace(/"/g, '&quot;')}" data-display="no"></span>`);
@@ -628,6 +636,19 @@ export default function App() {
       }
     });
 
+    turndownService.addRule('musicNotation', {
+      filter: (node: any) => node.nodeName === 'DIV' && node.getAttribute('data-type') === 'musicNotation',
+      replacement: (_: string, node: any) => {
+        const format = node.getAttribute('data-format') || 'lilypond';
+        const source = node.getAttribute('data-source');
+        const src = node.getAttribute('data-src');
+        if (src) {
+          return `\n{{< music src="${src}" format="${format}" >}}\n`;
+        }
+        return `\n\`\`\`${format}\n${source || ''}\n\`\`\`\n`;
+      }
+    });
+
     let markdownOutput = turndownService.turndown(html)
 
     // Restore the protected syntaxes
@@ -665,6 +686,12 @@ export default function App() {
         .replace(/[>%]}}/g, '⦄')
         .replace(/\[\[/g, '⟦')
         .replace(/\]\]/g, '⟧')
+        .replace(/```(lilypond|musicxml|abc|mei|humdrum)\n([\s\S]*?)```/g, (_, format, content) => {
+          return `<div data-type="musicNotation" data-format="${format}" data-source="${content.trim().replace(/"/g, '&quot;')}"></div>`;
+        })
+        .replace(/⦃<\s*music\s+src="([^"]+)"\s*(?:format="([^"]+)")?\s*>⦄/g, (_, src, format) => {
+          return `<div data-type="musicNotation" data-format="${format || 'lilypond'}" data-src="${src.replace(/"/g, '&quot;')}"></div>`;
+        })
         .replace(/\$\$([\s\S]+?)\$\$/g, (_, latex) => `<span data-type="inlineMath" data-latex="${latex.trim().replace(/"/g, '&quot;')}" data-display="yes"></span>`)
         .replace(/(?<!\$)\$([^$\n]+?)\$(?!\$)/g, (_, latex) => `<span data-type="inlineMath" data-latex="${latex.trim().replace(/"/g, '&quot;')}" data-display="no"></span>`);
 

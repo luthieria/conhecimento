@@ -3,6 +3,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import fs from 'fs'
 import path from 'path'
+import lilypondPlugin from './src/plugins/vite-plugin-lilypond'
 
 function getFiles(dir, basePath) {
   const result = [];
@@ -103,6 +104,7 @@ function getFiles(dir, basePath) {
 export default defineConfig({
   plugins: [
     react(),
+    lilypondPlugin(),
     {
       name: 'local-fs-api',
       configureServer(server) {
@@ -112,7 +114,7 @@ export default defineConfig({
           const rootPath = 'd:/Coding/Repositories/amethyst'
 
           // Serve images and assets from Amethyst
-          const isAsset = /\.(png|jpe?g|gif|svg|webp|pdf|docx?|xlsx?|json)$/i.test(req.url);
+          const isAsset = /\.(png|jpe?g|gif|svg|webp|pdf|docx?|xlsx?|json|musicxml|mxl|ly)$/i.test(req.url);
           if (isAsset) {
             const urlPath = req.url.split('?')[0];
             const decodedUrl = decodeURIComponent(urlPath);
@@ -142,7 +144,11 @@ export default defineConfig({
                     'svg': 'image/svg+xml',
                     'webp': 'image/webp',
                     'pdf': 'application/pdf',
-                    'json': 'application/json'
+                    'json': 'application/json',
+                    'ly': 'text/plain',
+                    'musicxml': 'application/xml',
+                    'xml': 'application/xml',
+                    'mxl': 'application/octet-stream'
                   };
                   res.setHeader('Content-Type', mimeTypes[ext] || 'application/octet-stream');
                   res.end(fs.readFileSync(fullPath));

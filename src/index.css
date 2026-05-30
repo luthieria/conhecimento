@@ -1026,3 +1026,159 @@ body {
     font-size: 0.56em !important;
   }
 }
+
+/* ============================================================
+   MUSIC NOTATION (Verovio / LilyPond)
+   ============================================================ */
+
+.music-notation-container {
+  margin: 1.5rem 0;
+  border: 1px solid #303033;
+  border-radius: 8px;
+  background: #faf8f5;
+  overflow: hidden;
+  position: relative;
+  min-height: 80px;
+}
+
+/* Loading state */
+.music-notation-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 2rem;
+  color: rgba(231, 229, 232, 0.6);
+  font-size: 0.85rem;
+  font-family: 'IBM Plex Sans', sans-serif;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: #18181b;
+}
+
+.music-notation-loading-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(217, 202, 154, 0.2);
+  border-top-color: #d9ca9a;
+  border-radius: 50%;
+  animation: notation-spin 0.8s linear infinite;
+}
+
+@keyframes notation-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Score area — Verovio outputs black-on-white SVGs */
+.music-notation-score {
+  padding: 1rem 0.5rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  display: flex;
+  justify-content: center;
+}
+
+.music-notation-score svg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Pagination controls */
+.music-notation-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  background: #1f1f22;
+  border-top: 1px solid #303033;
+}
+
+.music-notation-page-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #303033;
+  border-radius: 6px;
+  background: transparent;
+  color: #e7e5e8;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.music-notation-page-btn:hover:not(:disabled) {
+  background: #303033;
+  border-color: #d9ca9a;
+  color: #d9ca9a;
+}
+
+.music-notation-page-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.music-notation-page-btn .material-symbols-outlined {
+  font-size: 18px;
+}
+
+.music-notation-page-info {
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 0.75rem;
+  color: rgba(231, 229, 232, 0.6);
+  letter-spacing: 0.05em;
+  user-select: none;
+}
+
+/* Caption */
+.music-notation-caption {
+  text-align: center;
+  font-size: 0.8rem;
+  color: rgba(231, 229, 232, 0.5);
+  padding: 0.5rem 1rem;
+  font-style: italic;
+  font-family: 'IBM Plex Sans', sans-serif;
+  background: #1f1f22;
+  border-top: 1px solid #303033;
+}
+
+/* Error state */
+.music-notation-error {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  background: rgba(191, 97, 106, 0.08);
+  border: 1px solid rgba(191, 97, 106, 0.25);
+  border-radius: 8px;
+  margin: 1.5rem 0;
+}
+
+.music-notation-error-icon {
+  color: #bf616a;
+  flex-shrink: 0;
+}
+
+.music-notation-error-icon .material-symbols-outlined {
+  font-size: 24px;
+}
+
+.music-notation-error-text {
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 0.85rem;
+  color: rgba(231, 229, 232, 0.8);
+}
+
+.music-notation-error-text strong {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: #bf616a;
+}
+
+.music-notation-error-text p {
+  margin: 0;
+  color: rgba(231, 229, 232, 0.6);
+  font-size: 0.8rem;
+}

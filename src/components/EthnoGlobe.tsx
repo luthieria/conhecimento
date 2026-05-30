@@ -839,6 +839,7 @@ export default function EthnoGlobe({ onNavigate }: Props) {
           spherePath.attr('d', path(sphere))
           if (countryPaths) countryPaths.attr('d', (f: any) => path(f))
           if (territoryIslandPaths) territoryIslandPaths.attr('d', (f: any) => path(f))
+
           if (bordersPath && activeWorldData?.borders) bordersPath.attr('d', path(activeWorldData.borders))
           else bordersPath.attr('d', null)
           if (coastlinePath && activeWorldData?.coastline) coastlinePath.attr('d', path(activeWorldData.coastline))
@@ -985,12 +986,9 @@ export default function EthnoGlobe({ onNavigate }: Props) {
             const lambda = normalizeLongitude(dragRotateStart[0] + dx * sens)
             const phi = clamp(dragRotateStart[1] - dy * sens, TUNING.drag.minLatitude, TUNING.drag.maxLatitude)
             rotationTarget[0] = lambda; rotationTarget[1] = phi
-            const db = clamp(TUNING.motion.dragLerpActive, 0, 1)
-            rotationCurrent[0] = normalizeLongitude(rotationCurrent[0] + shortestAngularDelta(rotationCurrent[0], lambda) * db)
-            rotationCurrent[1] = clamp(rotationCurrent[1] + (phi - rotationCurrent[1]) * db, TUNING.drag.minLatitude, TUNING.drag.maxLatitude)
-            projection.rotate([rotationCurrent[0], rotationCurrent[1], rotationCurrent[2] || 0])
-            requestRedraw(); dragDistancePx = Math.max(dragDistancePx, Math.hypot(dx, dy))
-            pushDragSample(performance.now()); startMotionLoop()
+            dragDistancePx = Math.max(dragDistancePx, Math.hypot(dx, dy))
+            pushDragSample(performance.now())
+            startMotionLoop()
           })
           .on('end', () => {
             stage.classList.remove('is-dragging'); isDragging = false
@@ -1013,9 +1011,7 @@ export default function EthnoGlobe({ onNavigate }: Props) {
           const wdp = clamp(event.deltaY * dms, -TUNING.zoom.maxWheelStepPx, TUNING.zoom.maxWheelStepPx)
           const ns = zoomTarget * Math.exp(-wdp * TUNING.zoom.wheelSensitivity)
           zoomTarget = clamp(ns, TUNING.zoom.min, TUNING.zoom.max)
-          const zb = clamp(TUNING.motion.zoomLerpActive, 0, 1)
-          zoomScale = clamp(zoomScale + (zoomTarget - zoomScale) * zb, TUNING.zoom.min, TUNING.zoom.max)
-          applyScale(); requestRedraw(); startMotionLoop()
+          startMotionLoop()
         }
         stage.addEventListener('wheel', onWheel, { passive: false })
 
@@ -1039,7 +1035,11 @@ export default function EthnoGlobe({ onNavigate }: Props) {
               let id = seed; let suffix = 1
               while (usedIds.has(id)) { id = `${seed}-${suffix}`; suffix++ }
               usedIds.add(id)
-              return { ...f, id, __ethnoSupplemental: true }
+              let centroid = null
+              try {
+                centroid = d3.geoCentroid(f)
+              } catch { /* ignore */ }
+              return { ...f, id, centroid, __ethnoSupplemental: true }
             }).filter(Boolean)
 
             const matchedFeatures = features.filter((f: any) => {
