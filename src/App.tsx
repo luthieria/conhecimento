@@ -400,8 +400,12 @@ export default function App() {
             <div
               key={i}
               onClick={() => {
-                if (node.type === 'directory' && node.indexPath) {
-                  loadFile(node.indexPath)
+                if (node.type === 'directory') {
+                  if (node.indexPath) {
+                    loadFile(node.indexPath)
+                  } else {
+                    loadFile(node.path)
+                  }
                 } else if (node.type === 'file' || node.type === 'folder-link') {
                   loadFile(node.path)
                 }
@@ -479,9 +483,28 @@ export default function App() {
       window.history.pushState(null, '', `#${path}`)
     }
 
+    // Expand parent folders automatically
+    const parts = path.split('/')
+    let currentPath = ''
+    const toExpand = new Set<string>()
+    const isDir = !path.toLowerCase().endsWith('.md')
+    const limit = isDir ? parts.length : parts.length - 1
+    for (let i = 0; i < limit; i++) {
+      currentPath += (currentPath ? '/' : '') + parts[i]
+      toExpand.add(currentPath)
+    }
+    if (toExpand.size > 0) {
+      setExpandedFolders(prev => new Set([...prev, ...toExpand]))
+    }
+
     setIsLoading(true)
     fetch(`/api/file?path=${encodeURIComponent(path)}`)
-      .then(res => res.text())
+      .then(res => {
+        if (!res.ok) {
+          throw new Error('Not a file or file not found')
+        }
+        return res.text()
+      })
       .then(text => {
         const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*(?:\n|$)/;
         const match = text.match(frontmatterRegex);
@@ -548,6 +571,14 @@ export default function App() {
         if (editor) {
           editor.commands.setContent(protectedBody)
           setTimeout(() => extractHeadings(editor), 100)
+        }
+      })
+      .catch(() => {
+        setFrontmatter('')
+        setRawMarkdown('')
+        if (editor) {
+          editor.commands.setContent('')
+          setHeadings([])
         }
       })
       .finally(() => setIsLoading(false))
@@ -736,39 +767,6 @@ export default function App() {
     })
   }
 
-  const createNewFile = () => {
-    const filename = prompt("Enter new manuscript name (e.g., 'Chapter 1'):");
-    if (!filename) return;
-
-    // Decide directory based on activeFile or default to root
-    let dir = '';
-    if (activeFile) {
-      const parts = activeFile.split('/');
-      parts.pop(); // remove filename
-      dir = parts.join('/');
-    }
-
-    fetch('/api/create', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ directory: dir, filename })
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          // refresh tree
-          fetch('/api/files')
-            .then(res => res.json())
-            .then(treeData => {
-              setFileTree(treeData);
-              loadFile(data.path);
-            })
-        } else {
-          alert('Failed to create file: ' + data.error);
-        }
-      })
-      .catch(console.error)
-  }
 
   const getFileCount = (node: any): number => {
     if (node.type === 'file') return 1;
@@ -1015,7 +1013,8 @@ export default function App() {
                 </div>
               )}
               {activeFile && (() => {
-                const isTabbed = fm.type === 'tabbed' || fm.layout === 'tabbed'
+                const activeNode = findNodeByIndexPath(fileTree, activeFile)
+                const isTabbed = fm.type === 'tabbed' || fm.layout === 'tabbed' || activeNode?.type === 'directory'
 
                 return (
                   <>
