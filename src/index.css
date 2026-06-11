@@ -1027,6 +1027,118 @@ body {
   }
 }
 
+/* Callouts */
+.callout {
+  background-color: rgba(48, 48, 51, 0.25);
+  border: none;
+  border-left: 4px solid #ebcb8b; /* default color */
+  border-radius: 4px;
+  padding: 0;
+  margin: 1.5em 0;
+  overflow: hidden;
+  clear: both;
+}
+
+.callout > p, .callout > ul, .callout > ol, .callout > blockquote, .callout > div:not(.callout-header) {
+  padding: 0 16px;
+  margin-bottom: 12px;
+}
+.callout > *:last-child {
+  margin-bottom: 12px;
+}
+.callout > *:first-child { /* This targets the paragraph containing the hidden meta */
+  margin-top: 8px;
+}
+
+.callout-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0 4px 0;
+  background-color: transparent;
+  font-family: "IBM Plex Sans", "Alegreya Sans", sans-serif;
+  font-weight: 500;
+  font-size: 0.95em;
+  color: #ebcb8b;
+  border-bottom: none;
+  margin: 0 !important;
+}
+
+.callout.has-list .callout-header {
+  padding-left: 10px;
+}
+
+.callout-header-inner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.callout-title {
+  font-family: "IBM Plex Sans", "Alegreya Sans", sans-serif;
+  font-weight: 600;
+}
+
+.callout-icon {
+  font-size: 18px !important;
+}
+
+.callout-fold-icon {
+  cursor: pointer;
+  font-size: 20px !important;
+  opacity: 0.5;
+  transition: transform 0.2s, opacity 0.2s;
+  user-select: none;
+}
+
+.callout-fold-icon:hover {
+  opacity: 1;
+}
+
+.callout.is-collapsed .callout-fold-icon {
+  transform: rotate(-90deg);
+}
+
+.callout.is-collapsed > *:not(.callout-header) {
+  display: none !important;
+}
+
+/* Callout specific colors */
+.callout.callout-type-info, .callout.callout-type-note {
+  border-left-color: #81a1c1;
+}
+.callout.callout-type-info .callout-header, .callout.callout-type-note .callout-header {
+  color: #81a1c1;
+}
+
+.callout.callout-type-warning {
+  border-left-color: #ebcb8b;
+}
+.callout.callout-type-warning .callout-header {
+  color: #ebcb8b;
+}
+
+.callout.callout-type-danger, .callout.callout-type-error {
+  border-left-color: #bf616a;
+}
+.callout.callout-type-danger .callout-header, .callout.callout-type-error .callout-header {
+  color: #bf616a;
+}
+
+.callout.callout-type-success, .callout.callout-type-check {
+  border-left-color: #a3be8c;
+}
+.callout.callout-type-success .callout-header, .callout.callout-type-check .callout-header {
+  color: #a3be8c;
+}
+
+.callout.callout-type-abstract, .callout.callout-type-summary {
+  border-left-color: #b48ead;
+}
+.callout.callout-type-abstract .callout-header, .callout.callout-type-summary .callout-header {
+  color: #b48ead;
+}
+
 /* ============================================================
    MUSIC NOTATION (Verovio / LilyPond)
    ============================================================ */

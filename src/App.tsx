@@ -152,6 +152,114 @@ const SyntaxDecorator = Extension.create({
   }
 })
 
+const buildCalloutDecorations = (doc: any) => {
+  const decorations: Decoration[] = []
+  doc.descendants((node: any, pos: number) => {
+    if (node.type.name === 'blockquote') {
+      const firstChild = node.firstChild
+      if (firstChild && firstChild.type.name === 'paragraph' && firstChild.firstChild && firstChild.firstChild.isText) {
+        const text = firstChild.firstChild.text
+        const match = text.match(/^\[!([a-zA-Z0-9_-]+)\]([+-]?)(?:\s+(.+))?/)
+        if (match) {
+           const type = match[1]
+           const fold = match[2]
+           const meta = match[3] || ''
+           
+           let inlineStyles = ''
+           let customTitle = ''
+           if (meta) {
+             const parts = meta.split('|')
+             const titleParts: string[] = []
+             parts.forEach(p => {
+                const trimmed = p.trim()
+                if (trimmed === 'right') {
+                  inlineStyles += 'float: right; margin-left: 1.5rem; margin-bottom: 1rem;'
+                } else if (trimmed === 'left') {
+                  inlineStyles += 'float: left; margin-right: 1.5rem; margin-bottom: 1rem;'
+                } else if (trimmed === 'center') {
+                  inlineStyles += 'margin-left: auto; margin-right: auto;'
+                } else if (trimmed.match(/^\d+(px|%|rem|em|vw)$/)) {
+                  inlineStyles += `width: ${trimmed}; max-width: 100%;`
+                } else {
+                  titleParts.push(p)
+                }
+             })
+             customTitle = titleParts.join('|').trim()
+           }
+           const displayTitle = customTitle || type
+
+           // Hide the match text
+           decorations.push(Decoration.inline(pos + 2, pos + 2 + match[0].length, {
+             class: 'hidden-callout-meta',
+             style: 'display: none;'
+           }))
+
+           // Check if there is a list inside the callout
+           let hasList = false
+           node.forEach((child: any) => {
+             if (child.type.name === 'bulletList' || child.type.name === 'orderedList') {
+               hasList = true
+             }
+           })
+
+           // Add widget for the Callout Header
+           const headerWidget = document.createElement('div')
+           headerWidget.className = `callout-header callout-type-${type.toLowerCase()}`
+           let icon = 'info'
+           if (type.toLowerCase() === 'warning') icon = 'warning'
+           else if (type.toLowerCase() === 'danger' || type.toLowerCase() === 'error') icon = 'error'
+           else if (type.toLowerCase() === 'success' || type.toLowerCase() === 'check') icon = 'check_circle'
+           else if (type.toLowerCase() === 'question' || type.toLowerCase() === 'faq' || type.toLowerCase() === 'help') icon = 'help'
+           else if (type.toLowerCase() === 'todo') icon = 'task_alt'
+           else if (type.toLowerCase() === 'example') icon = 'list_alt'
+           else if (type.toLowerCase() === 'quote') icon = 'format_quote'
+           else if (type.toLowerCase() === 'note') icon = 'edit_note'
+           else if (type.toLowerCase() === 'abstract' || type.toLowerCase() === 'summary') icon = 'subject'
+
+           headerWidget.innerHTML = `
+             <div class="callout-header-inner">
+               <span class="material-symbols-outlined callout-icon">${icon}</span>
+               <span class="callout-title">${displayTitle}</span>
+             </div>
+             ${fold ? `<span class="material-symbols-outlined callout-fold-icon" onclick="this.closest('.callout').classList.toggle('is-collapsed')">expand_more</span>` : ''}
+           `
+           decorations.push(Decoration.widget(pos + 2, headerWidget))
+
+           decorations.push(Decoration.node(pos, pos + node.nodeSize, {
+             class: `callout callout-type-${type.toLowerCase()} ${fold === '-' ? 'is-collapsed' : ''} ${hasList ? 'has-list' : ''}`,
+             'data-callout-type': type,
+             'data-callout-fold': fold,
+             'data-callout-meta': meta,
+             style: inlineStyles
+           }))
+        }
+      }
+    }
+  })
+  return DecorationSet.create(doc, decorations)
+}
+
+const CalloutDecorator = Extension.create({
+  name: 'calloutDecorator',
+  addProseMirrorPlugins() {
+    return [
+      new Plugin({
+        key: new PluginKey('calloutDecorator'),
+        state: {
+          init(_config, instance) { return buildCalloutDecorations(instance.doc) },
+          apply(tr, oldState) {
+            if (!tr.docChanged) return oldState.map(tr.mapping, tr.doc)
+            return buildCalloutDecorations(tr.doc)
+          }
+        },
+        props: {
+          decorations(state) { return this.getState(state) }
+        }
+      })
+    ]
+  }
+})
+
 const FootnoteDecorator = Extension.create({
   name: 'footnoteDecorator',
 
@@ -516,6 +624,7 @@ export default function App() {
         types: ['heading', 'paragraph'],
       }),
       MathExtension.configure({ evaluation: false }),
+      CalloutDecorator,
       FootnoteDecorator,
       SyntaxDecorator,
       Image.configure({
