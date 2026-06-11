@@ -83,12 +83,24 @@ function getFiles(dir, basePath) {
       const iconMatch = content.match(/^icon:\s*["']?([^"'\n]+)["']?/m);
       if (iconMatch) icon = iconMatch[1];
 
+      const authorMatch = content.match(/^bookAuthor:\s*["']?([^"'\n]+)["']?/m);
+      const bookAuthor = authorMatch ? authorMatch[1] : null;
+
+      const yearMatch = content.match(/^bookYear:\s*["']?([^"'\n]+)["']?/m);
+      const bookYear = yearMatch ? yearMatch[1] : null;
+
+      const coverMatch = content.match(/^bookCover:\s*["']?([^"'\n]+)["']?/m);
+      const bookCover = coverMatch ? coverMatch[1] : null;
+
       result.push({
         name: title,
         type: 'file',
         path: path.relative(basePath, fullPath).replace(/\\/g, '/'),
         weight,
-        icon
+        icon,
+        bookAuthor,
+        bookYear,
+        bookCover
       });
     }
   }

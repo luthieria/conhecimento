@@ -375,6 +375,20 @@ export default function App() {
     }
   }, [isGlobe])
 
+  const flattenNodes = (nodes: any[]): any[] => {
+    const result: any[] = []
+    for (const node of nodes) {
+      if (node.type === 'directory' && !node.indexPath) {
+        if (node.children) {
+          result.push(...flattenNodes(node.children))
+        }
+      } else {
+        result.push(node)
+      }
+    }
+    return result
+  }
+
   const findNodeByIndexPath = (nodes: any[], indexPath: string): any | null => {
     if (!indexPath) return null
     // Normalize path for comparison
@@ -389,6 +403,53 @@ export default function App() {
       }
     }
     return null
+  }
+
+  const Bookshelf = ({ nodes }: { nodes: any[] }) => {
+    if (!nodes || nodes.length === 0) return null
+    return (
+      <div className="bookshelf-grid">
+        {nodes.map((node, i) => {
+          const coverURL = node.bookCover ? (
+            node.bookCover.startsWith('/') || node.bookCover.startsWith('http')
+              ? node.bookCover
+              : '/' + (node.path.split('/').slice(0, -1).join('/') ? `${node.path.split('/').slice(0, -1).join('/')}/${node.bookCover}` : node.bookCover)
+          ) : null;
+
+          return (
+            <div
+              key={i}
+              onClick={() => loadFile(node.path)}
+              className="bookshelf-book"
+            >
+              <span className={`bookshelf-book-cover${!coverURL ? ' is-fallback' : ''}`}>
+                {coverURL ? (
+                  <img src={coverURL} alt={`${node.name} cover`} loading="lazy" />
+                ) : (
+                  <>
+                    <span className="bookshelf-fallback-title">{node.name}</span>
+                    {node.bookAuthor && (
+                      <span className="bookshelf-fallback-meta">{node.bookAuthor}</span>
+                    )}
+                    {!node.bookAuthor && node.bookYear && (
+                      <span className="bookshelf-fallback-meta">{node.bookYear}</span>
+                    )}
+                  </>
+                )}
+              </span>
+              <span className="bookshelf-book-title">{node.name}</span>
+              {(node.bookAuthor || node.bookYear) && (
+                <span className="bookshelf-book-meta">
+                  {node.bookAuthor}
+                  {node.bookAuthor && node.bookYear && ' · '}
+                  {node.bookYear}
+                </span>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    )
   }
 
   const TabbedLinks = ({ nodes }: { nodes: any[] }) => {
@@ -1045,7 +1106,12 @@ export default function App() {
 
                     {isTabbed && !isGlobe && (() => {
                       const node = findNodeByIndexPath(fileTree, activeFile)
-                      return <TabbedLinks nodes={node?.children || []} />
+                      const children = node?.children || []
+                      const flattened = flattenNodes(children)
+                      if (fm.tabVariant === 'bookshelf') {
+                        return <Bookshelf nodes={flattened} />
+                      }
+                      return <TabbedLinks nodes={flattened} />
                     })()}
                   </>
                 )
