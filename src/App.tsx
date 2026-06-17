@@ -702,7 +702,10 @@ export default function App() {
               const folder = path.includes('/') ? path.split('/').slice(0, -1).join('/') : '';
               imagePath = folder ? `${folder}/${imagePath}` : imagePath;
             }
-            return `<img src="/${imagePath}" alt="${target}" data-wikilink="true" />`;
+            const encodedPath = ('/' + imagePath).split('/').map((seg, i) =>
+              i === 0 ? seg : encodeURIComponent(decodeURIComponent(seg))
+            ).join('/');
+            return `<img src="${encodedPath}" alt="${target.replace(/"/g, '&quot;')}" data-wikilink="true" />`;
           })
           .replace(/\!\[(.*?)\]\((.*?)\)(\{.*?\})?/g, (_, alt, src) => {
             // Handle standard markdown images ![alt](src){attr}
@@ -725,9 +728,15 @@ export default function App() {
             // Ensure path starts with / for our middleware
             const finalPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
 
-            // Return as standard markdown image but with resolved absolute path
-            // Tiptap's Markdown extension will handle this correctly
-            return `![${cleanAlt}](${finalPath})`;
+            // URL-encode the path so spaces/special chars don't break the src attribute,
+            // but preserve leading slash and don't double-encode already-encoded segments.
+            const encodedPath = finalPath.split('/').map((seg, i) =>
+              i === 0 ? seg : encodeURIComponent(decodeURIComponent(seg))
+            ).join('/');
+
+            // Emit raw <img> HTML so tiptap's Image node handles it directly,
+            // bypassing tiptap-markdown's image parser which fails on special-char paths.
+            return `<img src="${encodedPath}" alt="${cleanAlt.replace(/"/g, '&quot;')}" />`;
           })
           .replace(/```(lilypond|musicxml|abc|mei|humdrum)\n([\s\S]*?)```/g, (_, format, content) => {
             return `<div data-type="musicNotation" data-format="${format}" data-source="${content.trim().replace(/"/g, '&quot;')}"></div>`;
