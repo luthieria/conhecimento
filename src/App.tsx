@@ -376,6 +376,68 @@ const CustomTableCell = TableCell.extend({
   },
 })
 
+const parseImageOptions = (optionsString: string) => {
+  if (!optionsString) return { alt: '', style: 'display: block; margin-left: auto; margin-right: auto;' };
+  
+  const parts = optionsString.split('|').map(p => p.trim());
+  let alt = parts[0];
+  let width = null;
+  let height = null;
+  let align = 'center';
+
+  parts.forEach((part) => {
+    const partLower = part.toLowerCase();
+    if (partLower === 'left' || partLower === 'right' || partLower === 'center') {
+      align = partLower;
+    } else if (/^\d+(x\d+)?$/.test(partLower)) {
+      const dims = partLower.split('x');
+      width = dims[0];
+      if (dims[1]) height = dims[1];
+    }
+  });
+
+  const altLower = alt.toLowerCase();
+  if (altLower === 'left' || altLower === 'right' || altLower === 'center' || /^\d+(x\d+)?$/.test(altLower)) {
+      alt = '';
+  }
+
+  let style = `display: block;`;
+  if (align === 'center') {
+    style += ` margin-left: auto; margin-right: auto; clear: both;`;
+  } else if (align === 'left') {
+    style += ` float: left; margin-right: 1.5rem; margin-bottom: 1rem; clear: none;`;
+  } else if (align === 'right') {
+    style += ` float: right; margin-left: 1.5rem; margin-bottom: 1rem; clear: none;`;
+  }
+
+  if (width) style += ` width: ${width}px;`;
+  if (height) style += ` height: ${height}px;`;
+
+  return { alt, style };
+}
+
+const CustomImage = Image.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      style: {
+        default: null,
+        parseHTML: element => element.getAttribute('style'),
+        renderHTML: attributes => {
+          if (!attributes.style) return {}
+          return { style: attributes.style }
+        }
+      },
+      class: {
+        default: 'max-w-full h-auto rounded-lg shadow-sm cursor-zoom-in transition-transform duration-300 hover:scale-[1.02]',
+        parseHTML: element => element.getAttribute('class'),
+        renderHTML: attributes => {
+          return { class: attributes.class || 'max-w-full h-auto rounded-lg shadow-sm cursor-zoom-in transition-transform duration-300 hover:scale-[1.02]' }
+        }
+      }
+    }
+  }
+})
 
 const TableTopMenu = ({ editor }: { editor: any }) => {
   const [pos, setPos] = useState<{ top: number, left: number, width: number } | null>(null)
@@ -441,6 +503,7 @@ export default function App() {
   const [fileTree, setFileTree] = useState<any[]>([])
   const [activeFile, setActiveFile] = useState<string | null>(null)
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number, show: boolean } | null>(null)
+  const [fullScreenImage, setFullScreenImage] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
@@ -482,6 +545,17 @@ export default function App() {
       document.body.classList.remove('page-ethno-map-full-active')
     }
   }, [isGlobe])
+
+  useEffect(() => {
+    const handleImageClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'IMG' && !target.closest('.bookshelf-book-cover') && !target.closest('.lightbox-preview') && !target.closest('.no-lightbox')) {
+        setFullScreenImage((target as HTMLImageElement).src);
+      }
+    };
+    document.addEventListener('click', handleImageClick);
+    return () => document.removeEventListener('click', handleImageClick);
+  }, []);
 
   const flattenNodes = (nodes: any[]): any[] => {
     const result: any[] = []
@@ -627,11 +701,8 @@ export default function App() {
       CalloutDecorator,
       FootnoteDecorator,
       SyntaxDecorator,
-      Image.configure({
+      CustomImage.configure({
         allowBase64: true,
-        HTMLAttributes: {
-          class: 'max-w-full h-auto rounded-lg shadow-sm',
-        },
       }),
       MusicNotationNode,
     ],
@@ -696,8 +767,11 @@ export default function App() {
           .replace(/\[\[/g, '⟦')
           .replace(/\]\]/g, '⟧')
           .replace(/\!⟦(.*?)⟧/g, (_, target) => {
-            // Handle image wikilinks !⟦image.png⟧
-            let imagePath = target.split('|')[0].trim();
+            const parts = target.split('|');
+            let imagePath = parts[0].trim();
+            const optionsStr = parts.slice(1).join('|');
+            const { alt, style } = parseImageOptions(optionsStr);
+            
             if (!imagePath.startsWith('/') && !imagePath.startsWith('http')) {
               const folder = path.includes('/') ? path.split('/').slice(0, -1).join('/') : '';
               imagePath = folder ? `${folder}/${imagePath}` : imagePath;
@@ -705,38 +779,29 @@ export default function App() {
             const encodedPath = ('/' + imagePath).split('/').map((seg, i) =>
               i === 0 ? seg : encodeURIComponent(decodeURIComponent(seg))
             ).join('/');
-            return `<img src="${encodedPath}" alt="${target.replace(/"/g, '&quot;')}" data-wikilink="true" />`;
+            return `<img src="${encodedPath}" alt="${alt.replace(/"/g, '&quot;')}" style="${style}" data-wikilink="true" />`;
           })
-          .replace(/\!\[(.*?)\]\((.*?)\)(\{.*?\})?/g, (_, alt, src) => {
-            // Handle standard markdown images ![alt](src){attr}
+          .replace(/\!\[(.*?)\]\((.*?)\)(\{.*?\})?/g, (_, rawAlt, src) => {
             let imagePath = src.trim();
 
-            // Remove < > if present (Goldmark style)
             if (imagePath.startsWith('<') && imagePath.endsWith('>')) {
               imagePath = imagePath.slice(1, -1);
             }
 
-            // Handle Obsidian/Hugo attributes in alt text (e.g. ![alt|500](src))
-            // We'll strip them for now to ensure path resolution works
-            const cleanAlt = alt.split('|')[0].trim();
+            const { alt, style } = parseImageOptions(rawAlt);
 
             if (!imagePath.startsWith('/') && !imagePath.startsWith('http')) {
               const folder = path.includes('/') ? path.split('/').slice(0, -1).join('/') : '';
               imagePath = folder ? `${folder}/${imagePath}` : imagePath;
             }
 
-            // Ensure path starts with / for our middleware
             const finalPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
 
-            // URL-encode the path so spaces/special chars don't break the src attribute,
-            // but preserve leading slash and don't double-encode already-encoded segments.
             const encodedPath = finalPath.split('/').map((seg, i) =>
               i === 0 ? seg : encodeURIComponent(decodeURIComponent(seg))
             ).join('/');
 
-            // Emit raw <img> HTML so tiptap's Image node handles it directly,
-            // bypassing tiptap-markdown's image parser which fails on special-char paths.
-            return `<img src="${encodedPath}" alt="${cleanAlt.replace(/"/g, '&quot;')}" />`;
+            return `<img src="${encodedPath}" alt="${alt.replace(/"/g, '&quot;')}" style="${style}" />`;
           })
           .replace(/```(lilypond|musicxml|abc|mei|humdrum)\n([\s\S]*?)```/g, (_, format, content) => {
             return `<div data-type="musicNotation" data-format="${format}" data-source="${content.trim().replace(/"/g, '&quot;')}"></div>`;
@@ -1057,6 +1122,15 @@ export default function App() {
 
   return (
     <>
+      {fullScreenImage && (
+        <div 
+          className="fixed inset-0 z-[9999] bg-[#0e0e0f]/90 backdrop-blur-sm flex items-center justify-center cursor-zoom-out p-4 lightbox-preview"
+          onClick={() => setFullScreenImage(null)}
+        >
+          <img src={fullScreenImage} className="max-w-full max-h-full object-contain rounded-lg shadow-2xl" alt="Fullscreen preview" />
+        </div>
+      )}
+
       <div
         className="sidebar-hover-zone"
         onMouseEnter={() => setIsSidebarOpen(true)}
