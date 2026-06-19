@@ -499,6 +499,84 @@ const TableTopMenu = ({ editor }: { editor: any }) => {
   )
 }
 
+const TOCNode = ({ node, activeHeading }: { node: any, activeHeading: string }) => {
+  const isLevel1 = node.level === 1;
+  const isActive = activeHeading === node.text;
+
+  const getHoverColorClass = (level: number) => {
+    switch(level) {
+      case 1: return 'hover:text-[#bf616a]';
+      case 2: return 'hover:text-[#d08770]';
+      case 3: return 'hover:text-[#ebcb8b]';
+      case 4: return 'hover:text-[#a3be8c]';
+      case 5: return 'hover:text-[#b48ead]';
+      case 6: return 'hover:text-[#88c0d0]';
+      default: return 'hover:text-[#d8dee9]';
+    }
+  }
+
+  const getActiveColorClass = (level: number) => {
+    switch(level) {
+      case 1: return 'text-[#bf616a] font-bold';
+      case 2: return 'text-[#d08770] font-bold';
+      case 3: return 'text-[#ebcb8b] font-bold';
+      case 4: return 'text-[#a3be8c] font-bold';
+      case 5: return 'text-[#b48ead] font-bold';
+      case 6: return 'text-[#88c0d0] font-bold';
+      default: return 'text-[#d8dee9] font-bold';
+    }
+  }
+
+  const hoverClass = getHoverColorClass(node.level);
+  const activeClass = getActiveColorClass(node.level);
+
+  const baseClass = isLevel1 ? 'mb-1 text-[#D8DEE9]/70' : 'text-[#D8DEE9]/70 py-0.5';
+  
+  const finalClass = isActive ? activeClass : `${baseClass} ${hoverClass}`;
+
+  return (
+    <div className={`flex flex-col ${isLevel1 ? 'mt-3 first:mt-0' : 'mt-1'}`}>
+      <div 
+        className={`cursor-pointer transition-colors leading-snug ${finalClass}`}
+        onClick={() => {
+          const domElements = Array.from(document.querySelectorAll(`h${node.level}`))
+          const target = domElements.find(el => el.textContent === node.text)
+          if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }
+        }}
+      >
+        {node.text}
+      </div>
+      {node.children.length > 0 && (
+        <div className={`flex flex-col ${isLevel1 ? 'ml-1.5' : 'ml-2'} pl-3 border-l border-[#4C566A]/50`}>
+          {node.children.map((child: any) => <TOCNode key={child.id} node={child} activeHeading={activeHeading} />)}
+        </div>
+      )}
+    </div>
+  )
+}
+
+const buildHeadingTree = (headings: any[]) => {
+  const tree: any[] = [];
+  const stack: any[] = [];
+
+  headings.forEach((h: any) => {
+    const node = { ...h, children: [] };
+    while (stack.length > 0 && stack[stack.length - 1].level >= node.level) {
+      stack.pop();
+    }
+    if (stack.length > 0) {
+      stack[stack.length - 1].children.push(node);
+    } else {
+      tree.push(node);
+    }
+    stack.push(node);
+  });
+
+  return tree;
+};
+
 export default function App() {
   const [fileTree, setFileTree] = useState<any[]>([])
   const [activeFile, setActiveFile] = useState<string | null>(null)
@@ -670,6 +748,31 @@ export default function App() {
 
   // Track headings for TOC
   const [headings, setHeadings] = useState<{ level: number, text: string, id: string }[]>([])
+  const [activeHeading, setActiveHeading] = useState<string>('')
+
+  useEffect(() => {
+    if (headings.length === 0) return
+
+    const handleScroll = () => {
+      const headingElements = Array.from(document.querySelectorAll('.ProseMirror h1, .ProseMirror h2, .ProseMirror h3, .ProseMirror h4, .ProseMirror h5, .ProseMirror h6'))
+      
+      let currentActive = headings[0]?.text || ''
+      for (const el of headingElements) {
+        const rect = el.getBoundingClientRect()
+        // Check if heading is above a certain threshold (e.g., top 150px of viewport)
+        if (rect.top <= 150) {
+          currentActive = el.textContent || ''
+        } else {
+          break
+        }
+      }
+      setActiveHeading(currentActive)
+    }
+
+    handleScroll() // Call on mount/headings change
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [headings])
 
   const extractHeadings = (editorInstance: any) => {
     const json = editorInstance.getJSON()
@@ -1335,41 +1438,21 @@ export default function App() {
         </article>
       </main>
 
-      {activeFile && headings.length > 0 && !isGlobe && (
-        <nav className="bg-[#1f1f22]/70 backdrop-blur-xl font-ui text-xs italic docked right-4 top-24 w-56 rounded-lg no-border glassmorphism shadow-glow shadow-[0_0_40px_-5px_rgba(231,229,232,0.04)] fixed right-8 top-32 flex flex-col p-4 z-40">
-          <div className="mb-6">
-            <span className="text-sm font-semibold text-[#ebcb8b]">Table of Contents</span>
-            <p className="text-[10px] text-on-surface/40 non-italic mt-1 uppercase tracking-tighter">On this page</p>
-          </div>
-          <div className="flex flex-col gap-4 overflow-y-auto max-h-[60vh] custom-scrollbar">
-            {headings.map((h) => {
-              const ml = (h.level - 1) * 0.75
-              return (
-                <div
-                  key={h.id}
-                  style={{ marginLeft: `${ml}rem` }}
-                  className="text-on-surface/50 hover:text-[#ebcb8b] transition-colors scale-100 hover:scale-105 origin-left transition-transform flex items-start gap-2 cursor-pointer pb-2"
-                  onClick={() => {
-                    // Quick and dirty scroll by finding the hN tag containing this text.
-                    const domElements = Array.from(document.querySelectorAll(`h${h.level}`))
-                    const target = domElements.find(el => el.textContent === h.text)
-                    if (target) {
-                      target.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                    }
-                  }}
-                >
-                  <span className="material-symbols-outlined text-[14px] mt-0.5 opacity-40">
-                    {h.level === 1 ? 'label_important' : h.level === 2 ? 'subject' : h.level === 3 ? 'analytics' : 'short_text'}
-                  </span>
-                  <span className={h.level === 1 ? 'font-bold text-[#ebcb8b]' : ''}>
-                    {h.text}
-                  </span>
-                </div>
-              )
-            })}
-          </div>
-        </nav>
-      )}
+      {activeFile && headings.length > 0 && !isGlobe && (() => {
+        const displayTitle = fm.title || (activeFile ? activeFile.split('/').pop()?.replace(/\.md$/i, '') : 'Table of Contents');
+        return (
+          <nav className="fixed right-0 top-0 bottom-0 w-[16rem] p-[1rem] pr-[1.5rem] pt-[2rem] flex flex-col z-40 overflow-y-auto overflow-x-hidden text-[0.875rem] font-sans custom-scrollbar">
+            <div className="mb-4 border-b border-[#4C566A]/50 pb-3">
+              <span className="text-[1.1rem] font-bold text-[#8FBCBB] leading-tight block">{displayTitle}</span>
+            </div>
+            <div className="flex flex-col">
+              {buildHeadingTree(headings).map((node: any) => (
+                <TOCNode key={node.id} node={node} activeHeading={activeHeading} />
+              ))}
+            </div>
+          </nav>
+        );
+      })()}
     </>
   )
 }
