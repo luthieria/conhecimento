@@ -1263,9 +1263,29 @@ export default function App() {
             {renderTree(fileTree)}
           </nav>
         </div>
+        
+        <div className="shrink-0 px-6 py-6 mt-auto border-t border-[#303033]/30">
+          <div className="flex items-center gap-4 text-[10px] font-ui uppercase tracking-[0.2em] justify-center">
+            <button
+              onClick={() => viewMode !== 'reading' && toggleViewMode()}
+              className={`transition-colors flex items-center gap-2 ${viewMode === 'reading' ? 'text-[#a3be8c] font-bold' : 'text-[#e7e5e8]/40 hover:text-[#e7e5e8]'}`}
+            >
+              <span className="material-symbols-outlined text-[16px]">menu_book</span>
+              Read
+            </button>
+            <div className="w-[1px] h-3 bg-[#303033]"></div>
+            <button
+              onClick={() => viewMode !== 'editing' && toggleViewMode()}
+              className={`transition-colors flex items-center gap-2 ${viewMode === 'editing' ? 'text-[#d08770] font-bold' : 'text-[#e7e5e8]/40 hover:text-[#e7e5e8]'}`}
+            >
+              <span className="material-symbols-outlined text-[16px]">edit_document</span>
+              Edit
+            </button>
+          </div>
+        </div>
       </aside>
 
-      <main className={`min-h-screen pb-32 transition-all duration-[220ms] ease-[cubic-bezier(0.22,0.61,0.36,1)] ${isSidebarPinned ? 'ml-[16rem]' : 'ml-0'}`}>
+      <main className="min-h-screen pb-32 transition-all duration-[220ms] ease-[cubic-bezier(0.22,0.61,0.36,1)] ml-0">
         <nav className="relative z-10 bg-transparent font-ui uppercase text-[10px] tracking-widest font-bold flex items-center justify-between px-12 pt-2 pb-4 w-full gap-4">
           <div className="flex-1 min-w-0 flex items-center whitespace-nowrap overflow-hidden text-ellipsis mr-4">
             {activeFile ? (() => {
@@ -1313,7 +1333,7 @@ export default function App() {
               });
             })() : null}
           </div>
-          {activeFile && (
+          {activeFile && viewMode === 'editing' && (
             <div className="flex items-center gap-4 shrink-0">
               <button
                 onClick={() => editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
@@ -1322,24 +1342,6 @@ export default function App() {
                 <span className="material-symbols-outlined text-[14px]">table</span>
                 Insert Table
               </button>
-              <div className="flex items-center gap-1 bg-[#1f1f22] p-1 rounded-md border border-[#303033]">
-                <button
-                  onClick={() => viewMode !== 'reading' && toggleViewMode()}
-                  className={`px-3 py-1.5 rounded transition-colors flex items-center gap-2 ${viewMode === 'reading' ? 'bg-[#303033] text-[#e7e5e8]' : 'text-[#e7e5e8]/50 hover:text-[#e7e5e8]'}`}
-                  title="Reading / Visual Mode"
-                >
-                  <span className="material-symbols-outlined text-[14px]">menu_book</span>
-                  Reading
-                </button>
-                <button
-                  onClick={() => viewMode !== 'editing' && toggleViewMode()}
-                  className={`px-3 py-1.5 rounded transition-colors flex items-center gap-2 ${viewMode === 'editing' ? 'bg-[#303033] text-[#e7e5e8]' : 'text-[#e7e5e8]/50 hover:text-[#e7e5e8]'}`}
-                  title="Source / Editing Mode"
-                >
-                  <span className="material-symbols-outlined text-[14px]">edit_document</span>
-                  Editing
-                </button>
-              </div>
               <button
                 onClick={saveFile}
                 disabled={!activeFile}
