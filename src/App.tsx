@@ -1323,7 +1323,7 @@ export default function App() {
 
       <main className="min-h-screen pb-32 transition-all duration-[220ms] ease-[cubic-bezier(0.22,0.61,0.36,1)] ml-0">
         <nav className="relative z-10 bg-transparent font-ui uppercase text-[10px] tracking-widest font-bold flex items-center justify-between px-12 pt-2 pb-4 w-full gap-4">
-          <div className="flex-1 min-w-0 flex items-center whitespace-nowrap overflow-hidden text-ellipsis mr-4">
+          <div className="flex-1 min-w-0 flex items-center justify-center whitespace-nowrap overflow-hidden text-ellipsis mr-4">
             {activeFile ? (() => {
               const parts = activeFile.split('/').filter(p => p !== '_index.md');
               let cumulativePath = '';
