@@ -904,6 +904,14 @@ export default function App() {
               i === 0 ? seg : encodeURIComponent(decodeURIComponent(seg))
             ).join('/');
 
+            if (imagePath.toLowerCase().match(/\.(xml|musicxml|mei|ly|abc)$/)) {
+              let format = 'musicxml';
+              if (imagePath.toLowerCase().endsWith('.mei')) format = 'mei';
+              else if (imagePath.toLowerCase().endsWith('.ly')) format = 'lilypond';
+              else if (imagePath.toLowerCase().endsWith('.abc')) format = 'abc';
+              return `<div data-type="musicNotation" data-format="${format}" data-src="${encodedPath}"></div>`;
+            }
+
             return `<img src="${encodedPath}" alt="${alt.replace(/"/g, '&quot;')}" style="${style}" />`;
           })
           .replace(/```(lilypond|musicxml|abc|mei|humdrum)\n([\s\S]*?)```/g, (_, format, content) => {
@@ -1021,6 +1029,10 @@ export default function App() {
         const source = node.getAttribute('data-source');
         const src = node.getAttribute('data-src');
         if (src) {
+          const decodedSrc = decodeURIComponent(src);
+          if (decodedSrc.toLowerCase().match(/\.(xml|musicxml|mei|ly|abc)$/)) {
+            return `\n![music score](<${decodedSrc}>)\n`;
+          }
           return `\n{{< music src="${src}" format="${format}" >}}\n`;
         }
         return `\n\`\`\`${format}\n${source || ''}\n\`\`\`\n`;
@@ -1060,6 +1072,30 @@ export default function App() {
       setFrontmatter(fm);
 
       const protectedBody = contentBody
+        .replace(/\!\[(.*?)\]\((.*?)\)(\{.*?\})?/g, (match, rawAlt, src) => {
+          let imagePath = src.trim();
+          if (imagePath.startsWith('<') && imagePath.endsWith('>')) {
+            imagePath = imagePath.slice(1, -1);
+          }
+          if (imagePath.toLowerCase().match(/\.(xml|musicxml|mei|ly|abc)$/)) {
+            let format = 'musicxml';
+            if (imagePath.toLowerCase().endsWith('.mei')) format = 'mei';
+            else if (imagePath.toLowerCase().endsWith('.ly')) format = 'lilypond';
+            else if (imagePath.toLowerCase().endsWith('.abc')) format = 'abc';
+            
+            if (!imagePath.startsWith('/') && !imagePath.startsWith('http')) {
+              const folder = activeFile && activeFile.includes('/') ? activeFile.split('/').slice(0, -1).join('/') : '';
+              imagePath = folder ? `${folder}/${imagePath}` : imagePath;
+            }
+            const finalPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+            const encodedPath = finalPath.split('/').map((seg, i) =>
+              i === 0 ? seg : encodeURIComponent(decodeURIComponent(seg))
+            ).join('/');
+            
+            return `<div data-type="musicNotation" data-format="${format}" data-src="${encodedPath}"></div>`;
+          }
+          return match;
+        })
         .replace(/{{[<%]/g, '⦃')
         .replace(/[>%]}}/g, '⦄')
         .replace(/\[\[/g, '⟦')
@@ -1440,7 +1476,7 @@ export default function App() {
         </article>
       </main>
 
-      {activeFile && headings.length > 0 && !isGlobe && (() => {
+      {activeFile && headings.length > 0 && !isGlobe && fm.bookToC !== 'false' && fm.toc !== 'false' && (() => {
         const displayTitle = fm.title || (activeFile ? activeFile.split('/').pop()?.replace(/\.md$/i, '') : 'Table of Contents');
         return (
           <nav className="fixed right-0 top-0 bottom-0 w-[16rem] p-[1rem] pr-[1.5rem] pt-[2rem] flex flex-col z-40 overflow-y-auto overflow-x-hidden text-[0.875rem] font-sans custom-scrollbar">
