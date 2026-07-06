@@ -13,7 +13,7 @@ import { gfm } from 'turndown-plugin-gfm'
 import { useEffect, useState, useCallback } from 'react'
 import TextAlign from '@tiptap/extension-text-align'
 import Image from '@tiptap/extension-image'
-import { Extension } from '@tiptap/core'
+import { Extension, Node } from '@tiptap/core'
 import GraphView from './components/GraphView'
 import EthnoGlobe from './components/EthnoGlobe'
 import { Plugin, PluginKey } from '@tiptap/pm/state'
@@ -21,6 +21,71 @@ import { Decoration, DecorationSet } from '@tiptap/pm/view'
 import { MathExtension } from '@aarkue/tiptap-math-extension'
 import 'katex/dist/katex.min.css'
 import { MusicNotationNode } from './components/MusicNotationNode'
+
+/**
+ * Pre-process Markdown footnotes into HTML before feeding to TipTap.
+ *
+ * tiptap-markdown does not support footnotes and will mangle [^id] references
+ * (stripping the brackets so only ^id remains). This function:
+ *   1. Collects all footnote definitions [^id]: content (possibly multi-line)
+ *   2. Replaces all inline refs [^id] with <sup class="footnote-ref">N</sup>
+ *   3. Removes the raw definition lines and appends a rendered HTML footnotes
+ *      section at the end of the document so TipTap can display it cleanly.
+ */
+const processFootnotes = (markdown: string): string => {
+  // Collect footnote definitions. They look like:
+  //   [^id]: some text
+  //   [^id]: multi-line content
+  //           that is indented
+  const definitions = new Map<string, string>()
+  const defRegex = /^\[\^([^\]]+)\]:[ \t]*([\s\S]*?)(?=\n\[\^[^\]]+\]:|\n\n(?!\s)|\n(?=[^\s])|\n$|$)/gm
+
+  let body = markdown.replace(defRegex, (_, id, content) => {
+    definitions.set(id, content.trim())
+    return '' // Remove definition from body
+  })
+
+  if (definitions.size === 0) return markdown // Nothing to process
+
+  // Assign sequential numbers to IDs in order they first appear in the body
+  const order: string[] = []
+  const numOf = new Map<string, number>()
+  const refRegex = /\[\^([^\]]+)\](?!:)/g
+  let m: RegExpExecArray | null
+  while ((m = refRegex.exec(body)) !== null) {
+    const id = m[1]
+    if (!numOf.has(id)) {
+      numOf.set(id, order.length + 1)
+      order.push(id)
+    }
+  }
+  // Also number any definitions not referenced inline (preserve their order)
+  definitions.forEach((_, id) => {
+    if (!numOf.has(id)) {
+      numOf.set(id, order.length + 1)
+      order.push(id)
+    }
+  })
+
+  // Replace inline refs with HTML <sup> anchors
+  body = body.replace(/\[\^([^\]]+)\](?!:)/g, (_, id) => {
+    const n = numOf.get(id) ?? '?'
+    return `<sup class="footnote-ref" id="fnref-${id}"><a href="#fn-${id}">${n}</a></sup>`
+  })
+
+  // Build the footnotes section HTML
+  const items = order.map(id => {
+    const n = numOf.get(id)!
+    const content = definitions.get(id) ?? ''
+    return `<li id="fn-${id}" class="footnote-item"><span class="footnote-num">${n}.</span> ${content} <a href="#fnref-${id}" class="footnote-backref">↩</a></li>`
+  }).join('\n')
+
+  const encodedDefs = encodeURIComponent(JSON.stringify(Array.from(definitions.entries())))
+  const footnotesHtml = `\n<div class="footnotes-section" data-definitions="${encodedDefs}"><div class="footnotes-title">Footnotes</div><ol class="footnotes-list">${items}</ol></div>`
+
+  return body.trimEnd() + footnotesHtml
+}
+
 const buildFootnoteDecorations = (doc: any) => {
   const decorations: Decoration[] = []
   let firstFootnotePos = -1
@@ -161,77 +226,77 @@ const buildCalloutDecorations = (doc: any) => {
         const text = firstChild.firstChild.text
         const match = text.match(/^\[!([a-zA-Z0-9_-]+)\]([+-]?)(?:\s+(.+))?/)
         if (match) {
-           const type = match[1]
-           const fold = match[2]
-           const meta = match[3] || ''
-           
-           let inlineStyles = ''
-           let customTitle = ''
-           if (meta) {
-             const parts = meta.split('|')
-             const titleParts: string[] = []
-             parts.forEach(p => {
-                const trimmed = p.trim()
-                if (trimmed === 'right') {
-                  inlineStyles += 'float: right; margin-left: 1.5rem; margin-bottom: 1rem;'
-                } else if (trimmed === 'left') {
-                  inlineStyles += 'float: left; margin-right: 1.5rem; margin-bottom: 1rem;'
-                } else if (trimmed === 'center') {
-                  inlineStyles += 'margin-left: auto; margin-right: auto;'
-                } else if (trimmed.match(/^\d+(px|%|rem|em|vw)$/)) {
-                  inlineStyles += `width: ${trimmed}; max-width: 100%;`
-                } else {
-                  titleParts.push(p)
-                }
-             })
-             customTitle = titleParts.join('|').trim()
-           }
-           const displayTitle = customTitle || type
+          const type = match[1]
+          const fold = match[2]
+          const meta = match[3] || ''
 
-           // Hide the match text
-           decorations.push(Decoration.inline(pos + 2, pos + 2 + match[0].length, {
-             class: 'hidden-callout-meta',
-             style: 'display: none;'
-           }))
+          let inlineStyles = ''
+          let customTitle = ''
+          if (meta) {
+            const parts = meta.split('|')
+            const titleParts: string[] = []
+            parts.forEach(p => {
+              const trimmed = p.trim()
+              if (trimmed === 'right') {
+                inlineStyles += 'float: right; margin-left: 1.5rem; margin-bottom: 1rem;'
+              } else if (trimmed === 'left') {
+                inlineStyles += 'float: left; margin-right: 1.5rem; margin-bottom: 1rem;'
+              } else if (trimmed === 'center') {
+                inlineStyles += 'margin-left: auto; margin-right: auto;'
+              } else if (trimmed.match(/^\d+(px|%|rem|em|vw)$/)) {
+                inlineStyles += `width: ${trimmed}; max-width: 100%;`
+              } else {
+                titleParts.push(p)
+              }
+            })
+            customTitle = titleParts.join('|').trim()
+          }
+          const displayTitle = customTitle || type
 
-           // Check if there is a list inside the callout
-           let hasList = false
-           node.forEach((child: any) => {
-             if (child.type.name === 'bulletList' || child.type.name === 'orderedList') {
-               hasList = true
-             }
-           })
+          // Hide the match text
+          decorations.push(Decoration.inline(pos + 2, pos + 2 + match[0].length, {
+            class: 'hidden-callout-meta',
+            style: 'display: none;'
+          }))
 
-           // Add widget for the Callout Header
-           const headerWidget = document.createElement('div')
-           headerWidget.className = `callout-header callout-type-${type.toLowerCase()}`
-           let icon = 'info'
-           if (type.toLowerCase() === 'warning') icon = 'warning'
-           else if (type.toLowerCase() === 'danger' || type.toLowerCase() === 'error') icon = 'error'
-           else if (type.toLowerCase() === 'success' || type.toLowerCase() === 'check') icon = 'check_circle'
-           else if (type.toLowerCase() === 'question' || type.toLowerCase() === 'faq' || type.toLowerCase() === 'help') icon = 'help'
-           else if (type.toLowerCase() === 'todo') icon = 'task_alt'
-           else if (type.toLowerCase() === 'example') icon = 'list_alt'
-           else if (type.toLowerCase() === 'quote') icon = 'format_quote'
-           else if (type.toLowerCase() === 'note') icon = 'edit_note'
-           else if (type.toLowerCase() === 'abstract' || type.toLowerCase() === 'summary') icon = 'subject'
+          // Check if there is a list inside the callout
+          let hasList = false
+          node.forEach((child: any) => {
+            if (child.type.name === 'bulletList' || child.type.name === 'orderedList') {
+              hasList = true
+            }
+          })
 
-           headerWidget.innerHTML = `
+          // Add widget for the Callout Header
+          const headerWidget = document.createElement('div')
+          headerWidget.className = `callout-header callout-type-${type.toLowerCase()}`
+          let icon = 'info'
+          if (type.toLowerCase() === 'warning') icon = 'warning'
+          else if (type.toLowerCase() === 'danger' || type.toLowerCase() === 'error') icon = 'error'
+          else if (type.toLowerCase() === 'success' || type.toLowerCase() === 'check') icon = 'check_circle'
+          else if (type.toLowerCase() === 'question' || type.toLowerCase() === 'faq' || type.toLowerCase() === 'help') icon = 'help'
+          else if (type.toLowerCase() === 'todo') icon = 'task_alt'
+          else if (type.toLowerCase() === 'example') icon = 'list_alt'
+          else if (type.toLowerCase() === 'quote') icon = 'format_quote'
+          else if (type.toLowerCase() === 'note') icon = 'edit_note'
+          else if (type.toLowerCase() === 'abstract' || type.toLowerCase() === 'summary') icon = 'subject'
+
+          headerWidget.innerHTML = `
              <div class="callout-header-inner">
                <span class="material-symbols-outlined callout-icon">${icon}</span>
                <span class="callout-title">${displayTitle}</span>
              </div>
              ${fold ? `<span class="material-symbols-outlined callout-fold-icon" onclick="this.closest('.callout').classList.toggle('is-collapsed')">expand_more</span>` : ''}
            `
-           decorations.push(Decoration.widget(pos + 2, headerWidget))
+          decorations.push(Decoration.widget(pos + 2, headerWidget))
 
-           decorations.push(Decoration.node(pos, pos + node.nodeSize, {
-             class: `callout callout-type-${type.toLowerCase()} ${fold === '-' ? 'is-collapsed' : ''} ${hasList ? 'has-list' : ''}`,
-             'data-callout-type': type,
-             'data-callout-fold': fold,
-             'data-callout-meta': meta,
-             style: inlineStyles
-           }))
+          decorations.push(Decoration.node(pos, pos + node.nodeSize, {
+            class: `callout callout-type-${type.toLowerCase()} ${fold === '-' ? 'is-collapsed' : ''} ${hasList ? 'has-list' : ''}`,
+            'data-callout-type': type,
+            'data-callout-fold': fold,
+            'data-callout-meta': meta,
+            style: inlineStyles
+          }))
         }
       }
     }
@@ -378,7 +443,7 @@ const CustomTableCell = TableCell.extend({
 
 const parseImageOptions = (optionsString: string) => {
   if (!optionsString) return { alt: '', style: 'display: block; margin-left: auto; margin-right: auto;' };
-  
+
   const parts = optionsString.split('|').map(p => p.trim());
   let alt = parts[0];
   let width = null;
@@ -398,7 +463,7 @@ const parseImageOptions = (optionsString: string) => {
 
   const altLower = alt.toLowerCase();
   if (altLower === 'left' || altLower === 'right' || altLower === 'center' || /^\d+(x\d+)?$/.test(altLower)) {
-      alt = '';
+    alt = '';
   }
 
   let style = `display: block;`;
@@ -436,6 +501,71 @@ const CustomImage = Image.extend({
         }
       }
     }
+  }
+})
+
+const FootnoteRefNode = Node.create({
+  name: 'footnoteRef',
+  group: 'inline',
+  inline: true,
+  atom: true,
+
+  addAttributes() {
+    return {
+      id: { default: null },
+      text: { default: null }
+    }
+  },
+
+  parseHTML() {
+    return [
+      {
+        tag: 'sup.footnote-ref',
+        getAttrs: (element: any) => ({
+          id: element.id ? element.id.replace('fnref-', '') : null,
+          text: element.textContent
+        })
+      }
+    ]
+  },
+
+  renderHTML({ node }) {
+    return ['sup', { class: 'footnote-ref', id: `fnref-${node.attrs.id}` }, 
+             ['a', { href: `#fn-${node.attrs.id}` }, node.attrs.text]
+           ]
+  }
+})
+
+const FootnotesSectionNode = Node.create({
+  name: 'footnotesSection',
+  group: 'block',
+  atom: true,
+
+  addAttributes() {
+    return {
+      definitions: { default: '[]' },
+      html: { default: '' }
+    }
+  },
+
+  parseHTML() {
+    return [
+      {
+        tag: 'div.footnotes-section',
+        getAttrs: (element: any) => ({
+          definitions: element.getAttribute('data-definitions') || '[]',
+          html: element.innerHTML
+        })
+      }
+    ]
+  },
+
+  renderHTML({ node }) {
+    const dom = document.createElement('div')
+    dom.className = 'footnotes-section'
+    dom.setAttribute('data-definitions', node.attrs.definitions)
+    dom.innerHTML = node.attrs.html
+    return dom
   }
 })
 
@@ -504,7 +634,7 @@ const TOCNode = ({ node, activeHeading }: { node: any, activeHeading: string }) 
   const isActive = activeHeading === node.text;
 
   const getHoverColorClass = (level: number) => {
-    switch(level) {
+    switch (level) {
       case 1: return 'hover:text-[#bf616a]';
       case 2: return 'hover:text-[#d08770]';
       case 3: return 'hover:text-[#ebcb8b]';
@@ -516,7 +646,7 @@ const TOCNode = ({ node, activeHeading }: { node: any, activeHeading: string }) 
   }
 
   const getActiveColorClass = (level: number) => {
-    switch(level) {
+    switch (level) {
       case 1: return 'text-[#bf616a] font-bold';
       case 2: return 'text-[#d08770] font-bold';
       case 3: return 'text-[#ebcb8b] font-bold';
@@ -531,12 +661,12 @@ const TOCNode = ({ node, activeHeading }: { node: any, activeHeading: string }) 
   const activeClass = getActiveColorClass(node.level);
 
   const baseClass = isLevel1 ? 'mb-1 text-[#D8DEE9]/70' : 'text-[#D8DEE9]/70 py-0.5';
-  
+
   const finalClass = isActive ? activeClass : `${baseClass} ${hoverClass}`;
 
   return (
     <div className={`flex flex-col ${isLevel1 ? 'mt-3 first:mt-0' : 'mt-1'}`}>
-      <div 
+      <div
         className={`cursor-pointer transition-colors leading-snug ${finalClass}`}
         onClick={() => {
           const domElements = Array.from(document.querySelectorAll(`h${node.level}`))
@@ -755,7 +885,7 @@ export default function App() {
 
     const handleScroll = () => {
       const headingElements = Array.from(document.querySelectorAll('.ProseMirror h1, .ProseMirror h2, .ProseMirror h3, .ProseMirror h4, .ProseMirror h5, .ProseMirror h6'))
-      
+
       let currentActive = headings[0]?.text || ''
       for (const el of headingElements) {
         const rect = el.getBoundingClientRect()
@@ -792,7 +922,7 @@ export default function App() {
   const editor = useEditor({
     extensions: [
       StarterKit,
-      Markdown,
+      Markdown.configure({ html: true }),
       Table.configure({ resizable: true }),
       TableRow,
       CustomTableHeader,
@@ -807,6 +937,8 @@ export default function App() {
       CustomImage.configure({
         allowBase64: true,
       }),
+      FootnoteRefNode,
+      FootnotesSectionNode,
       MusicNotationNode,
     ],
     editable: false,
@@ -864,7 +996,10 @@ export default function App() {
 
         setFrontmatter(fm);
 
-        const protectedBody = contentBody
+        // Pre-process footnotes into HTML before tiptap-markdown mangles [^id] refs
+        const bodyWithFootnotes = processFootnotes(contentBody);
+
+        const protectedBody = bodyWithFootnotes
           .replace(/{{[<%]/g, '⦃')
           .replace(/[>%]}}/g, '⦄')
           .replace(/\[\[/g, '⟦')
@@ -874,7 +1009,7 @@ export default function App() {
             let imagePath = parts[0].trim();
             const optionsStr = parts.slice(1).join('|');
             const { alt, style } = parseImageOptions(optionsStr);
-            
+
             if (!imagePath.startsWith('/') && !imagePath.startsWith('http')) {
               const folder = path.includes('/') ? path.split('/').slice(0, -1).join('/') : '';
               imagePath = folder ? `${folder}/${imagePath}` : imagePath;
@@ -922,6 +1057,7 @@ export default function App() {
           })
           .replace(/\$\$([\s\S]+?)\$\$/g, (_, latex) => `<span data-type="inlineMath" data-latex="${latex.trim().replace(/"/g, '&quot;')}" data-display="yes"></span>`)
           .replace(/(?<!\$)\$([^$\n]+?)\$(?!\$)/g, (_, latex) => `<span data-type="inlineMath" data-latex="${latex.trim().replace(/"/g, '&quot;')}" data-display="no"></span>`);
+
 
         if (editor) {
           editor.commands.setContent(protectedBody)
@@ -1039,6 +1175,35 @@ export default function App() {
       }
     });
 
+    turndownService.addRule('footnoteRef', {
+      filter: (node: any) => node.nodeName === 'SUP' && node.classList.contains('footnote-ref'),
+      replacement: (_: string, node: any) => {
+        const idMatch = node.id ? node.id.match(/^fnref-(.+)$/) : null
+        if (idMatch) {
+          return `[^${idMatch[1]}]`
+        }
+        return `[^${node.textContent}]`
+      }
+    });
+
+    turndownService.addRule('footnotesSection', {
+      filter: (node: any) => node.nodeName === 'DIV' && node.classList.contains('footnotes-section'),
+      replacement: (_: string, node: any) => {
+        const defsAttr = node.getAttribute('data-definitions')
+        if (defsAttr) {
+          try {
+            const defs = JSON.parse(decodeURIComponent(defsAttr))
+            let out = '\n\n'
+            for (const [id, content] of defs) {
+              out += `[^${id}]: ${content}\n`
+            }
+            return out
+          } catch (e) {}
+        }
+        return ''
+      }
+    });
+
     let markdownOutput = turndownService.turndown(html)
 
     // Restore the protected syntaxes
@@ -1071,7 +1236,10 @@ export default function App() {
 
       setFrontmatter(fm);
 
-      const protectedBody = contentBody
+      // Pre-process footnotes into HTML before tiptap-markdown mangles [^id] refs
+      const bodyWithFootnotes = processFootnotes(contentBody);
+
+      const protectedBody = bodyWithFootnotes
         .replace(/\!\[(.*?)\]\((.*?)\)(\{.*?\})?/g, (match, rawAlt, src) => {
           let imagePath = src.trim();
           if (imagePath.startsWith('<') && imagePath.endsWith('>')) {
@@ -1082,7 +1250,7 @@ export default function App() {
             if (imagePath.toLowerCase().endsWith('.mei')) format = 'mei';
             else if (imagePath.toLowerCase().endsWith('.ly')) format = 'lilypond';
             else if (imagePath.toLowerCase().endsWith('.abc')) format = 'abc';
-            
+
             if (!imagePath.startsWith('/') && !imagePath.startsWith('http')) {
               const folder = activeFile && activeFile.includes('/') ? activeFile.split('/').slice(0, -1).join('/') : '';
               imagePath = folder ? `${folder}/${imagePath}` : imagePath;
@@ -1091,7 +1259,7 @@ export default function App() {
             const encodedPath = finalPath.split('/').map((seg, i) =>
               i === 0 ? seg : encodeURIComponent(decodeURIComponent(seg))
             ).join('/');
-            
+
             return `<div data-type="musicNotation" data-format="${format}" data-src="${encodedPath}"></div>`;
           }
           return match;
@@ -1108,6 +1276,7 @@ export default function App() {
         })
         .replace(/\$\$([\s\S]+?)\$\$/g, (_, latex) => `<span data-type="inlineMath" data-latex="${latex.trim().replace(/"/g, '&quot;')}" data-display="yes"></span>`)
         .replace(/(?<!\$)\$([^$\n]+?)\$(?!\$)/g, (_, latex) => `<span data-type="inlineMath" data-latex="${latex.trim().replace(/"/g, '&quot;')}" data-display="no"></span>`);
+
 
       if (editor) {
         editor.commands.setContent(protectedBody)
@@ -1198,7 +1367,7 @@ export default function App() {
               </div>
               <span className="text-[15px] opacity-40 ml-2 shrink-0 font-mono">{count}</span>
             </div>
-            <div 
+            <div
               className="grid transition-[grid-template-rows] duration-200 ease-in-out"
               style={{ gridTemplateRows: isExpanded ? '1fr' : '0fr' }}
             >
@@ -1262,7 +1431,7 @@ export default function App() {
   return (
     <>
       {fullScreenImage && (
-        <div 
+        <div
           className="fixed inset-0 z-[9999] bg-[#0e0e0f]/90 backdrop-blur-sm flex items-center justify-center cursor-zoom-out p-4 lightbox-preview"
           onClick={() => setFullScreenImage(null)}
         >
@@ -1299,7 +1468,7 @@ export default function App() {
             {renderTree(fileTree)}
           </nav>
         </div>
-        
+
         <div className="shrink-0 px-6 py-6 mt-auto border-t border-[#303033]/30">
           <div className="flex items-center gap-4 text-[10px] font-ui uppercase tracking-[0.2em] justify-center">
             <button
