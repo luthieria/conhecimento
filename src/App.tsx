@@ -8,6 +8,7 @@ import { TableRow } from '@tiptap/extension-table-row'
 import { TableCell } from '@tiptap/extension-table-cell'
 import { TableHeader } from '@tiptap/extension-table-header'
 import TurndownService from 'turndown'
+import MarkdownIt from 'markdown-it'
 // @ts-ignore
 import { gfm } from 'turndown-plugin-gfm'
 import { useEffect, useState, useCallback } from 'react'
@@ -74,10 +75,12 @@ const processFootnotes = (markdown: string): string => {
   })
 
   // Build the footnotes section HTML
+  const mdParser = new MarkdownIt({ html: true, linkify: true })
   const items = order.map(id => {
     const n = numOf.get(id)!
     const content = definitions.get(id) ?? ''
-    return `<li id="fn-${id}" class="footnote-item"><span class="footnote-num">${n}.</span> ${content} <a href="#fnref-${id}" class="footnote-backref">↩</a></li>`
+    const parsedContent = mdParser.renderInline(content)
+    return `<li id="fn-${id}" class="footnote-item"><span class="footnote-num">${n}.</span> ${parsedContent} <a href="#fnref-${id}" class="footnote-backref">↩</a></li>`
   }).join('\n')
 
   const encodedDefs = encodeURIComponent(JSON.stringify(Array.from(definitions.entries())))
