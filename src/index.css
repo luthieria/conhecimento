@@ -521,6 +521,367 @@ body {
   opacity: 0.5;
 }
 
+/* Hugo shortcodes rendered from Amethyst */
+.ProseMirror [data-type="hugoShortcodeBlock"],
+.ProseMirror [data-type="hugoShortcodeInline"] {
+  display: contents;
+}
+
+.ProseMirror .shortcode-placeholder {
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  border: 1px dashed #4c566a;
+  border-radius: 6px;
+  color: rgba(231, 229, 232, 0.55);
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.ProseMirror .book-expand {
+  margin: 1rem 0;
+  border: 2px solid #d9ca9a;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.ProseMirror .book-expand-head {
+  color: #d9ca9a;
+  font-family: 'IBM Plex Sans', sans-serif;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.ProseMirror .book-expand-content {
+  display: none;
+  padding: 1rem;
+}
+
+.ProseMirror .book-expand input[type="checkbox"]:checked+.book-expand-content {
+  display: block;
+}
+
+.ProseMirror .book-tabs {
+  margin: 1rem 0;
+  border: 1px solid #303033;
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.ProseMirror .book-tabs input[type="radio"],
+.ProseMirror .book-expand input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ProseMirror .book-tabs label {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  color: rgba(231, 229, 232, 0.72);
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 0.8rem;
+}
+
+.ProseMirror .book-tabs-content {
+  order: 999;
+  width: 100%;
+  padding: 1rem;
+  display: none;
+  border-top: 1px solid #303033;
+}
+
+.ProseMirror .book-tabs input[type="radio"]:checked+label {
+  border-bottom: 2px solid #d9ca9a;
+  color: #d9ca9a;
+  font-weight: bold;
+}
+
+.ProseMirror .book-tabs input[type="radio"]:checked+label+.book-tabs-content {
+  display: block;
+}
+
+.ProseMirror .book-columns {
+  display: flex;
+  flex-wrap: wrap;
+  margin-left: -1rem;
+  margin-right: -1rem;
+}
+
+.ProseMirror .book-columns>div {
+  flex: 1 1 15rem;
+  margin: 1rem 0;
+  min-width: 12rem;
+  padding: 0 1rem;
+}
+
+.ProseMirror .gallery {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: center;
+  gap: var(--gallery-gap, 12px);
+  overflow-x: auto;
+  padding: 0.5rem 0;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ProseMirror .gallery>p,
+.ProseMirror .gallery>img,
+.ProseMirror .gallery .card {
+  flex: 0 0 auto;
+  width: var(--gallery-item-width, 180px);
+  height: var(--gallery-item-height, 120px);
+  margin: 0;
+  padding: 0;
+  scroll-snap-align: start;
+}
+
+.ProseMirror .gallery>img,
+.ProseMirror .gallery>p>img,
+.ProseMirror .gallery .card>img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  border-radius: var(--gallery-radius, 6px);
+  object-fit: contain;
+  background: #131314;
+}
+
+.ProseMirror .gallery.cover>img,
+.ProseMirror .gallery.cover>p>img,
+.ProseMirror .gallery.cover .card>img {
+  object-fit: cover;
+  background: transparent;
+}
+
+.ProseMirror .collage {
+  column-count: var(--collage-columns, 3);
+  column-gap: var(--collage-gap, 1px);
+  width: 100%;
+  margin: 1rem 0;
+}
+
+.ProseMirror .collage p {
+  margin: 0;
+  display: contents;
+}
+
+.ProseMirror .collage img,
+.ProseMirror .collage a,
+.ProseMirror .img-styled,
+.ProseMirror .img-container img,
+.ProseMirror .img-container video {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0;
+  break-inside: avoid;
+  border-radius: var(--img-radius, var(--collage-radius, 8px));
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.18), 0 2px 4px -1px rgba(0, 0, 0, 0.16);
+  filter: var(--img-base-filter, none);
+}
+
+.ProseMirror .collage a {
+  text-decoration: none;
+}
+
+.ProseMirror .img-styled.blend {
+  box-shadow: none;
+  --img-base-filter: invert(1) hue-rotate(180deg);
+}
+
+.ProseMirror .img-styled:hover,
+.ProseMirror .img-container img:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.22), 0 10px 10px -5px rgba(0, 0, 0, 0.18);
+  filter: brightness(1.1) var(--img-base-filter, none);
+}
+
+.ProseMirror .img-container {
+  margin: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.ProseMirror .img-container.align-center {
+  align-items: center;
+  text-align: center;
+}
+
+.ProseMirror .img-container.align-right {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.ProseMirror .img-container.align-left {
+  align-items: flex-start;
+  text-align: left;
+}
+
+.ProseMirror .img-container.align-float-left,
+.ProseMirror .img-container.float-left {
+  float: left;
+  display: block;
+  width: auto !important;
+  margin: 0.5rem 1rem 0.5rem 0;
+}
+
+.ProseMirror .img-container.align-float-right,
+.ProseMirror .img-container.float-right {
+  float: right;
+  display: block;
+  width: auto !important;
+  margin: 0.5rem 0 0.5rem 1rem;
+}
+
+.ProseMirror .img-container img,
+.ProseMirror .img-container video {
+  width: var(--img-width, auto);
+  max-width: 100%;
+}
+
+.ProseMirror a.book-btn {
+  display: inline-block;
+  font-size: 0.75rem;
+  color: #d9ca9a;
+  line-height: 2rem;
+  padding: 0 1rem;
+  border: 1px solid #d9ca9a;
+  border-radius: 6px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.ProseMirror a.book-btn:hover {
+  background: rgba(217, 202, 154, 0.08);
+  text-decoration: none;
+}
+
+.ProseMirror .book-hint {
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  border-left: 4px solid #81a1c1;
+  border-radius: 6px;
+  background: rgba(129, 161, 193, 0.1);
+}
+
+.ProseMirror .book-hint.warning {
+  border-color: #ebcb8b;
+  background: rgba(235, 203, 139, 0.1);
+}
+
+.ProseMirror .book-hint.danger,
+.ProseMirror .book-hint.error {
+  border-color: #bf616a;
+  background: rgba(191, 97, 106, 0.1);
+}
+
+.ProseMirror .book-hint.success {
+  border-color: #a3be8c;
+  background: rgba(163, 190, 140, 0.1);
+}
+
+.ProseMirror .book-comment {
+  margin: 1rem 0;
+  padding: 0.5rem 1rem;
+  border-inline-start: 4px solid #d9ca9a;
+  border-radius: 6px;
+  background: rgba(48, 48, 51, 0.55);
+}
+
+.ProseMirror .book-comment> :first-child,
+.ProseMirror .book-hint> :first-child {
+  margin-top: 0;
+}
+
+.ProseMirror .book-comment> :last-child,
+.ProseMirror .book-hint> :last-child {
+  margin-bottom: 0;
+}
+
+.ProseMirror .book-glossary {
+  position: relative;
+  cursor: help;
+  display: inline;
+}
+
+.ProseMirror .book-glossary-word {
+  text-decoration: underline dotted #9ba09d;
+  text-underline-offset: 3px;
+  transition: all 0.2s ease;
+}
+
+.ProseMirror .book-glossary-word:hover {
+  color: #d9ca9a;
+  text-decoration-color: #d9ca9a;
+  text-decoration-style: solid;
+}
+
+.ProseMirror .book-glossary-content {
+  visibility: hidden;
+  width: 280px;
+  background-color: #1f1f22;
+  color: #e7e5e8;
+  text-align: left;
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  border: 1px solid #303033;
+  box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.25);
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 0.68rem;
+  line-height: 1.4;
+  font-weight: normal;
+  font-style: normal;
+  position: absolute;
+  z-index: 1000;
+  bottom: 140%;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+}
+
+.ProseMirror .book-glossary-content::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 8px;
+  border-style: solid;
+  border-color: #303033 transparent transparent transparent;
+}
+
+.ProseMirror .book-glossary:hover .book-glossary-content {
+  visibility: visible;
+  opacity: 1;
+  transform: translateX(-50%) translateY(-5px);
+  pointer-events: auto;
+}
+
+@media (max-width: 1024px) {
+  .ProseMirror .collage {
+    column-count: 2;
+  }
+}
+
+@media (max-width: 600px) {
+  .ProseMirror .collage {
+    column-count: 1;
+  }
+}
+
 /* Footnotes Styling */
 
 /* Inline footnote reference — <sup class="footnote-ref"> */

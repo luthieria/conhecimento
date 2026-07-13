@@ -89,6 +89,305 @@ const processFootnotes = (markdown: string): string => {
   return body.trimEnd() + footnotesHtml
 }
 
+const shortcodeMarkdown = new MarkdownIt({ html: true, linkify: true })
+
+const escapeHtml = (value: string): string =>
+  value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+
+const encodeAttr = (value: string): string => encodeURIComponent(value)
+
+const decodeAttr = (value: string): string => {
+  try {
+    return decodeURIComponent(value)
+  } catch {
+    return value
+  }
+}
+
+type ShortcodeArgs = {
+  positional: string[]
+  named: Record<string, string>
+  flags: Set<string>
+}
+
+type ShortcodeToken = {
+  full: string
+  name: string
+  rawArgs: string
+  closing: boolean
+  selfClosing: boolean
+  start: number
+  end: number
+}
+
+const parseShortcodeArgs = (rawArgs: string): ShortcodeArgs => {
+  const positional: string[] = []
+  const named: Record<string, string> = {}
+  const flags = new Set<string>()
+  const tokenRegex = /([A-Za-z0-9_-]+)=("[^"]*"|'[^']*'|[^\s]+)|"([^"]*)"|'([^']*)'|([^\s]+)/g
+  let match: RegExpExecArray | null
+
+  while ((match = tokenRegex.exec(rawArgs)) !== null) {
+    if (match[1]) {
+      named[match[1]] = (match[2] || '').replace(/^['"]|['"]$/g, '')
+    } else {
+      const value = match[3] ?? match[4] ?? match[5] ?? ''
+      if (value) {
+        positional.push(value)
+        flags.add(value)
+      }
+    }
+  }
+
+  return { positional, named, flags }
+}
+
+const getShortcodeParam = (args: ShortcodeArgs, name: string, index: number, fallback = ''): string =>
+  args.named[name] ?? args.positional[index] ?? fallback
+
+const findShortcodeToken = (input: string, fromIndex: number): ShortcodeToken | null => {
+  const regex = /{{\s*[<%]\s*(\/?)([A-Za-z0-9_-]+)([\s\S]*?)\s*(\/?)\s*[>%]\s*}}/g
+  regex.lastIndex = fromIndex
+  const match = regex.exec(input)
+  if (!match) return null
+
+  const rawArgs = (match[3] || '').trim()
+  return {
+    full: match[0],
+    name: match[2],
+    rawArgs,
+    closing: match[1] === '/',
+    selfClosing: match[4] === '/' || rawArgs.endsWith('/'),
+    start: match.index,
+    end: match.index + match[0].length,
+  }
+}
+
+const findClosingShortcode = (input: string, open: ShortcodeToken): ShortcodeToken | null => {
+  let depth = 1
+  let cursor = open.end
+
+  while (cursor < input.length) {
+    const token = findShortcodeToken(input, cursor)
+    if (!token) return null
+    cursor = token.end
+
+    if (token.name !== open.name) continue
+    if (token.closing) {
+      depth -= 1
+      if (depth === 0) return token
+    } else if (!token.selfClosing) {
+      depth += 1
+    }
+  }
+
+  return null
+}
+
+const resolveContentAssetPath = (src: string, currentPath: string): string => {
+  if (!src || src.startsWith('/') || /^https?:\/\//i.test(src)) return src
+  const folder = currentPath.includes('/') ? currentPath.split('/').slice(0, -1).join('/') : ''
+  return `/${folder ? `${folder}/` : ''}${src}`.split('/').map((seg, index) =>
+    index === 0 ? seg : encodeURIComponent(decodeURIComponent(seg))
+  ).join('/')
+}
+
+const normalizeRenderedImagePaths = (html: string, currentPath: string): string =>
+  html.replace(/(<(?:img|video)\b[^>]*\bsrc=")([^"]+)(")/gi, (_, before, src, after) =>
+    `${before}${escapeHtml(resolveContentAssetPath(src, currentPath))}${after}`
+  )
+
+const renderMarkdownFragment = (markdown: string, currentPath: string): string =>
+  normalizeRenderedImagePaths(shortcodeMarkdown.render(processHugoShortcodes(markdown, currentPath)), currentPath)
+
+const shortcodeNode = (source: string, html: string, inline = false): string => {
+  const tag = inline ? 'span' : 'div'
+  const type = inline ? 'hugoShortcodeInline' : 'hugoShortcodeBlock'
+  return `<${tag} data-type="${type}" data-shortcode-source="${encodeAttr(source)}" data-shortcode-html="${encodeAttr(html)}">${html}</${tag}>`
+}
+
+const renderHugoShortcode = (token: ShortcodeToken, inner: string, source: string, currentPath: string): string => {
+  const args = parseShortcodeArgs(token.rawArgs.replace(/\/$/, '').trim())
+  const name = token.name.toLowerCase()
+
+  switch (name) {
+    case 'expand': {
+      const title = getShortcodeParam(args, 'title', 0, 'Expand')
+      const icon = getShortcodeParam(args, 'icon', 1, '↕')
+      const html = `<div class="book-expand"><label><div class="book-expand-head flex justify-between"><span>${escapeHtml(title)}</span><span>${escapeHtml(icon)}</span></div><input type="checkbox" class="hidden" /><div class="book-expand-content markdown-inner">${renderMarkdownFragment(inner, currentPath)}</div></label></div>`
+      return shortcodeNode(source, html)
+    }
+    case 'details': {
+      const title = getShortcodeParam(args, 'title', 0, '')
+      const open = args.flags.has('open') || args.named.open != null ? ' open' : ''
+      const html = `<details${open}><summary>${shortcodeMarkdown.renderInline(title)}</summary><div class="markdown-inner">${renderMarkdownFragment(inner, currentPath)}</div></details>`
+      return shortcodeNode(source, html)
+    }
+    case 'tabs': {
+      const id = getShortcodeParam(args, 'id', 0, 'default')
+      const tabs: Array<{ title: string, content: string }> = []
+      let cursor = 0
+      while (cursor < inner.length) {
+        const tab = findShortcodeToken(inner, cursor)
+        if (!tab || tab.name.toLowerCase() !== 'tab' || tab.closing) break
+        const close = findClosingShortcode(inner, tab)
+        if (!close) break
+        const tabArgs = parseShortcodeArgs(tab.rawArgs)
+        tabs.push({
+          title: getShortcodeParam(tabArgs, 'title', 0, 'Tab'),
+          content: inner.slice(tab.end, close.start),
+        })
+        cursor = close.end
+      }
+      const group = `tabs-${id}`
+      const html = `<div class="book-tabs">${tabs.map((tab, index) => {
+        const inputId = `${group}-${index}`
+        return `<input type="radio" class="toggle" name="${escapeHtml(group)}" id="${escapeHtml(inputId)}"${index === 0 ? ' checked="checked"' : ''} /><label for="${escapeHtml(inputId)}">${escapeHtml(tab.title)}</label><div class="book-tabs-content markdown-inner">${renderMarkdownFragment(tab.content, currentPath)}</div>`
+      }).join('')}</div>`
+      return shortcodeNode(source, html)
+    }
+    case 'columns': {
+      const html = `<div class="book-columns flex flex-wrap">${inner.split('<--->').map(column => `<div class="flex-even markdown-inner">${renderMarkdownFragment(column, currentPath)}</div>`).join('')}</div>`
+      return shortcodeNode(source, html)
+    }
+    case 'gallery':
+    case 'collage': {
+      const width = getShortcodeParam(args, 'width', 0, '180px')
+      const height = getShortcodeParam(args, 'height', 1, '120px')
+      const gap = getShortcodeParam(args, 'gap', 2, name === 'gallery' ? '12px' : '1px')
+      const radius = getShortcodeParam(args, 'radius', 3, '8px')
+      const className = getShortcodeParam(args, 'class', 4, '')
+      const style = name === 'gallery'
+        ? `--gallery-item-width: ${width}; --gallery-item-height: ${height}; --gallery-gap: ${gap}; --gallery-radius: ${radius};`
+        : `--collage-columns: ${getShortcodeParam(args, 'columns', 0, '2')}; --collage-gap: ${gap}; --collage-radius: ${radius};`
+      const html = `<div class="${name}${className ? ` ${escapeHtml(className)}` : ''}" style="${escapeHtml(style)}">${renderMarkdownFragment(inner, currentPath)}</div>`
+      return shortcodeNode(source, html)
+    }
+    case 'button': {
+      const href = getShortcodeParam(args, 'href', 0, getShortcodeParam(args, 'relref', 0, ''))
+      const target = getShortcodeParam(args, 'target', 1, '')
+      const className = getShortcodeParam(args, 'class', 2, '')
+      const html = `<a${href ? ` href="${escapeHtml(href)}"` : ''}${target ? ` target="${escapeHtml(target)}" rel="noopener"` : ''} class="book-btn${className ? ` ${escapeHtml(className)}` : ''}">${renderMarkdownFragment(inner, currentPath)}</a>`
+      return shortcodeNode(source, html, true)
+    }
+    case 'hint': {
+      const kind = getShortcodeParam(args, 'type', 0, '')
+      const html = `<blockquote class="book-hint ${escapeHtml(kind)}">${renderMarkdownFragment(inner, currentPath)}</blockquote>`
+      return shortcodeNode(source, html)
+    }
+    case 'comment': {
+      const html = `<blockquote class="book-comment">${renderMarkdownFragment(inner, currentPath)}</blockquote>`
+      return shortcodeNode(source, html)
+    }
+    case 'gloss': {
+      const text = getShortcodeParam(args, 'text', 0, '')
+      const html = `<span class="book-glossary"><span class="book-glossary-word">${renderMarkdownFragment(inner, currentPath)}</span><span class="book-glossary-content">${shortcodeMarkdown.renderInline(text)}</span></span>`
+      return shortcodeNode(source, html, true)
+    }
+    case 'img': {
+      const src = getShortcodeParam(args, 'src', 0, '')
+      const alt = getShortcodeParam(args, 'alt', 1, '')
+      const width = getShortcodeParam(args, 'width', 2, '100%')
+      const align = getShortcodeParam(args, 'align', 3, 'none')
+      const className = getShortcodeParam(args, 'class', 4, '')
+      const radius = getShortcodeParam(args, 'radius', 5, '8px')
+      const resolvedSrc = resolveContentAssetPath(src, currentPath)
+      const media = src.toLowerCase().endsWith('.mp4')
+        ? `<video src="${escapeHtml(resolvedSrc)}" autoplay loop muted playsinline class="img-styled ${escapeHtml(className)}"></video>`
+        : `<img src="${escapeHtml(resolvedSrc)}" alt="${escapeHtml(alt)}" class="img-styled ${escapeHtml(className)}">`
+      const html = `<div class="img-container align-${escapeHtml(align)}" style="--img-width: ${escapeHtml(width)}; --img-radius: ${escapeHtml(radius)};">${media}</div>`
+      return shortcodeNode(source, html)
+    }
+    case 'katex': {
+      const display = args.flags.has('display') || args.named.display === 'true'
+      const html = `<span data-type="inlineMath" data-latex="${escapeHtml(inner.trim())}" data-display="${display ? 'yes' : 'no'}"></span>`
+      return shortcodeNode(source, html, true)
+    }
+    case 'mermaid': {
+      const className = getShortcodeParam(args, 'class', 0, '')
+      const html = `<p class="mermaid${className ? ` ${escapeHtml(className)}` : ''}">${escapeHtml(inner.trim())}</p>`
+      return shortcodeNode(source, html)
+    }
+    case 'table': {
+      const id = getShortcodeParam(args, 'id', 0, '')
+      const className = getShortcodeParam(args, 'class', 1, '')
+      const theme = getShortcodeParam(args, 'theme', 2, 'excel-theme')
+      const html = `<div class="premium-table-wrapper ${escapeHtml(className)}"><table${id ? ` id="${escapeHtml(id)}"` : ''} class="premium-table ${escapeHtml(theme)}">${processHugoShortcodes(inner, currentPath)}</table></div>`
+      return shortcodeNode(source, html)
+    }
+    case 'tr': {
+      const className = getShortcodeParam(args, 'class', 0, '')
+      return `<tr${className ? ` class="${escapeHtml(className)}"` : ''}>${processHugoShortcodes(inner, currentPath)}</tr>`
+    }
+    case 'td':
+    case 'th': {
+      const className = getShortcodeParam(args, 'class', 0, '')
+      const colspan = getShortcodeParam(args, 'colspan', 1, '')
+      const rowspan = getShortcodeParam(args, 'rowspan', 2, '')
+      const align = getShortcodeParam(args, 'align', 3, '')
+      return `<${name}${colspan ? ` colspan="${escapeHtml(colspan)}"` : ''}${rowspan ? ` rowspan="${escapeHtml(rowspan)}"` : ''}${className ? ` class="${escapeHtml(className)}"` : ''}${align ? ` style="text-align: ${escapeHtml(align)};"` : ''}>${renderMarkdownFragment(inner, currentPath)}</${name}>`
+    }
+    case 'tabbed-children':
+    case 'embed-children':
+    case 'section':
+    case 'handsontable':
+    case 'ethno-world-map': {
+      const html = `<div class="shortcode-placeholder shortcode-placeholder-${escapeHtml(name)}">${escapeHtml(name)}</div>`
+      return shortcodeNode(source, html)
+    }
+    default:
+      return source
+        .replace(/{{[<%]/g, '⦃')
+        .replace(/[>%]}}/g, '⦄')
+  }
+}
+
+const processHugoShortcodes = (markdown: string, currentPath = ''): string => {
+  let output = ''
+  let cursor = 0
+
+  while (cursor < markdown.length) {
+    const token = findShortcodeToken(markdown, cursor)
+    if (!token) {
+      output += markdown.slice(cursor)
+      break
+    }
+
+    output += markdown.slice(cursor, token.start)
+
+    if (token.closing) {
+      output += token.full
+      cursor = token.end
+      continue
+    }
+
+    if (token.selfClosing) {
+      output += renderHugoShortcode(token, '', token.full, currentPath)
+      cursor = token.end
+      continue
+    }
+
+    const close = findClosingShortcode(markdown, token)
+    if (!close) {
+      output += renderHugoShortcode(token, '', token.full, currentPath)
+      cursor = token.end
+      continue
+    }
+
+    const inner = markdown.slice(token.end, close.start)
+    const source = markdown.slice(token.start, close.end)
+    output += renderHugoShortcode(token, inner, source, currentPath)
+    cursor = close.end
+  }
+
+  return output
+}
+
 const buildFootnoteDecorations = (doc: any) => {
   const decorations: Decoration[] = []
   let firstFootnotePos = -1
@@ -238,7 +537,7 @@ const buildCalloutDecorations = (doc: any) => {
           if (meta) {
             const parts = meta.split('|')
             const titleParts: string[] = []
-            parts.forEach(p => {
+            parts.forEach((p: string) => {
               const trimmed = p.trim()
               if (trimmed === 'right') {
                 inlineStyles += 'float: right; margin-left: 1.5rem; margin-bottom: 1rem;'
@@ -567,6 +866,75 @@ const FootnotesSectionNode = Node.create({
     const dom = document.createElement('div')
     dom.className = 'footnotes-section'
     dom.setAttribute('data-definitions', node.attrs.definitions)
+    dom.innerHTML = node.attrs.html
+    return dom
+  }
+})
+
+const HugoShortcodeBlockNode = Node.create({
+  name: 'hugoShortcodeBlock',
+  group: 'block',
+  atom: true,
+
+  addAttributes() {
+    return {
+      source: { default: '' },
+      html: { default: '' }
+    }
+  },
+
+  parseHTML() {
+    return [
+      {
+        tag: 'div[data-type="hugoShortcodeBlock"]',
+        getAttrs: (element: any) => ({
+          source: decodeAttr(element.getAttribute('data-shortcode-source') || ''),
+          html: decodeAttr(element.getAttribute('data-shortcode-html') || element.innerHTML || '')
+        })
+      }
+    ]
+  },
+
+  renderHTML({ node }) {
+    const dom = document.createElement('div')
+    dom.setAttribute('data-type', 'hugoShortcodeBlock')
+    dom.setAttribute('data-shortcode-source', encodeAttr(node.attrs.source))
+    dom.setAttribute('data-shortcode-html', encodeAttr(node.attrs.html))
+    dom.innerHTML = node.attrs.html
+    return dom
+  }
+})
+
+const HugoShortcodeInlineNode = Node.create({
+  name: 'hugoShortcodeInline',
+  group: 'inline',
+  inline: true,
+  atom: true,
+
+  addAttributes() {
+    return {
+      source: { default: '' },
+      html: { default: '' }
+    }
+  },
+
+  parseHTML() {
+    return [
+      {
+        tag: 'span[data-type="hugoShortcodeInline"]',
+        getAttrs: (element: any) => ({
+          source: decodeAttr(element.getAttribute('data-shortcode-source') || ''),
+          html: decodeAttr(element.getAttribute('data-shortcode-html') || element.innerHTML || '')
+        })
+      }
+    ]
+  },
+
+  renderHTML({ node }) {
+    const dom = document.createElement('span')
+    dom.setAttribute('data-type', 'hugoShortcodeInline')
+    dom.setAttribute('data-shortcode-source', encodeAttr(node.attrs.source))
+    dom.setAttribute('data-shortcode-html', encodeAttr(node.attrs.html))
     dom.innerHTML = node.attrs.html
     return dom
   }
@@ -942,6 +1310,8 @@ export default function App() {
       }),
       FootnoteRefNode,
       FootnotesSectionNode,
+      HugoShortcodeBlockNode,
+      HugoShortcodeInlineNode,
       MusicNotationNode,
     ],
     editable: false,
@@ -1000,7 +1370,8 @@ export default function App() {
         setFrontmatter(fm);
 
         // Pre-process footnotes into HTML before tiptap-markdown mangles [^id] refs
-        const bodyWithFootnotes = processFootnotes(contentBody);
+        const bodyWithShortcodes = processHugoShortcodes(contentBody, path);
+        const bodyWithFootnotes = processFootnotes(bodyWithShortcodes);
 
         const protectedBody = bodyWithFootnotes
           .replace(/{{[<%]/g, '⦃')
@@ -1038,7 +1409,7 @@ export default function App() {
 
             const finalPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
 
-            const encodedPath = finalPath.split('/').map((seg, i) =>
+            const encodedPath = finalPath.split('/').map((seg: string, i: number) =>
               i === 0 ? seg : encodeURIComponent(decodeURIComponent(seg))
             ).join('/');
 
@@ -1135,6 +1506,18 @@ export default function App() {
     })
     turndownService.use(gfm)
     turndownService.keep(['table', 'tr', 'td', 'th', 'tbody', 'thead', 'colgroup', 'col'])
+
+    turndownService.addRule('hugoShortcode', {
+      filter: (node: any) => {
+        return (node.nodeName === 'DIV' || node.nodeName === 'SPAN')
+          && (node.getAttribute('data-type') === 'hugoShortcodeBlock' || node.getAttribute('data-type') === 'hugoShortcodeInline')
+          && node.getAttribute('data-shortcode-source')
+      },
+      replacement: (_: string, node: any) => {
+        const source = decodeAttr(node.getAttribute('data-shortcode-source') || '')
+        return node.nodeName === 'SPAN' ? source : `\n${source}\n`
+      }
+    });
 
     turndownService.addRule('inlineMath', {
       filter: (node: any) => {
@@ -1240,10 +1623,11 @@ export default function App() {
       setFrontmatter(fm);
 
       // Pre-process footnotes into HTML before tiptap-markdown mangles [^id] refs
-      const bodyWithFootnotes = processFootnotes(contentBody);
+      const bodyWithShortcodes = processHugoShortcodes(contentBody, activeFile || '');
+      const bodyWithFootnotes = processFootnotes(bodyWithShortcodes);
 
       const protectedBody = bodyWithFootnotes
-        .replace(/\!\[(.*?)\]\((.*?)\)(\{.*?\})?/g, (match, rawAlt, src) => {
+        .replace(/\!\[(.*?)\]\((.*?)\)(\{.*?\})?/g, (match, _rawAlt, src) => {
           let imagePath = src.trim();
           if (imagePath.startsWith('<') && imagePath.endsWith('>')) {
             imagePath = imagePath.slice(1, -1);
@@ -1259,7 +1643,7 @@ export default function App() {
               imagePath = folder ? `${folder}/${imagePath}` : imagePath;
             }
             const finalPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
-            const encodedPath = finalPath.split('/').map((seg, i) =>
+            const encodedPath = finalPath.split('/').map((seg: string, i: number) =>
               i === 0 ? seg : encodeURIComponent(decodeURIComponent(seg))
             ).join('/');
 
@@ -1580,7 +1964,8 @@ export default function App() {
               )}
               {activeFile && (() => {
                 const activeNode = findNodeByIndexPath(fileTree, activeFile)
-                const isTabbed = fm.type === 'tabbed' || fm.layout === 'tabbed' || activeNode?.type === 'directory'
+                const hasTabbedChildrenShortcode = /{{\s*[<%]\s*tabbed-children\b/.test(rawMarkdown)
+                const isTabbed = fm.type === 'tabbed' || fm.layout === 'tabbed' || activeNode?.type === 'directory' || hasTabbedChildrenShortcode
 
                 return (
                   <>
