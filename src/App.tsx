@@ -744,7 +744,7 @@ export default function App() {
   }
 
   const fm = parseFrontmatter(frontmatter)
-  const isGlobe = !!activeFile && (activeFile.includes('Etnomusicolog') || rawMarkdown.includes('ethno-world-map') || fm.bodyClass === 'page-ethno-map-full' || fm.layout === 'globe')
+  const isGlobe = !!activeFile && (rawMarkdown.includes('ethno-world-map') || fm.bodyClass === 'page-ethno-map-full' || fm.layout === 'globe')
 
   useEffect(() => {
     if (isGlobe) {

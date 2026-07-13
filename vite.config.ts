@@ -54,7 +54,7 @@ function getFiles(dir, basePath) {
           children
         });
       } else {
-        if (children.length > 0) {
+        if (children.length > 0 || fs.existsSync(indexPath)) {
           result.push({
             name: title,
             type: 'directory',
@@ -166,7 +166,7 @@ export default defineConfig({
                   res.end(fs.readFileSync(fullPath));
                   return;
                 }
-              } catch (e) {
+              } catch {
                 // Ignore errors and try next path
               }
             }
@@ -195,7 +195,7 @@ export default defineConfig({
               const content = fs.readFileSync(fullPath, 'utf-8');
               res.setHeader('Content-Type', 'text/plain');
               res.end(content);
-            } catch (e) {
+            } catch {
               res.statusCode = 404;
               res.end('File not found');
             }
