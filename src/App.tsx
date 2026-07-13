@@ -150,6 +150,9 @@ const parseShortcodeArgs = (rawArgs: string): ShortcodeArgs => {
 const getShortcodeParam = (args: ShortcodeArgs, name: string, index: number, fallback = ''): string =>
   args.named[name] ?? args.positional[index] ?? fallback
 
+const normalizeCssLength = (value: string): string =>
+  /^-?\d+(?:\.\d+)?$/.test(value.trim()) ? `${value.trim()}px` : value
+
 const findShortcodeToken = (input: string, fromIndex: number): ShortcodeToken | null => {
   const regex = /{{\s*[<%]\s*(\/?)([A-Za-z0-9_-]+)([\s\S]*?)\s*(\/?)\s*[>%]\s*}}/g
   regex.lastIndex = fromIndex
@@ -257,10 +260,10 @@ const renderHugoShortcode = (token: ShortcodeToken, inner: string, source: strin
     }
     case 'gallery':
     case 'collage': {
-      const width = getShortcodeParam(args, 'width', 0, '180px')
-      const height = getShortcodeParam(args, 'height', 1, '120px')
-      const gap = getShortcodeParam(args, 'gap', 2, name === 'gallery' ? '12px' : '1px')
-      const radius = getShortcodeParam(args, 'radius', 3, '8px')
+      const width = normalizeCssLength(getShortcodeParam(args, 'width', 0, '180px'))
+      const height = normalizeCssLength(getShortcodeParam(args, 'height', 1, '120px'))
+      const gap = normalizeCssLength(getShortcodeParam(args, 'gap', 2, name === 'gallery' ? '12px' : '1px'))
+      const radius = normalizeCssLength(getShortcodeParam(args, 'radius', 3, name === 'gallery' ? '10px' : '8px'))
       const className = getShortcodeParam(args, 'class', 4, '')
       const style = name === 'gallery'
         ? `--gallery-item-width: ${width}; --gallery-item-height: ${height}; --gallery-gap: ${gap}; --gallery-radius: ${radius};`
